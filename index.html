@@ -60,6 +60,22 @@ body[data-piece="minimal"] .square .piece{font-family:ui-monospace,monospace;fon
 .promotion{display:none;position:absolute;inset:0;background:#061426bb;backdrop-filter:blur(8px);z-index:5;align-items:center;justify-content:center;gap:9px}.promotion.show{display:flex}.promotion button{font-size:35px;width:58px;height:62px;border-radius:14px;background:#e8eef4;color:#172331;border:0;cursor:pointer;box-shadow:0 8px 20px #0005}.promotion button:active{transform:scale(.9)}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.side .moves-section{grid-column:1/-1}.moves{height:150px}}
 @media(max-width:520px){.app{padding:17px 12px 28px}.side{display:flex;padding:15px}.brand h1{font-size:18px}.pill{font-size:10px}.board-panel{padding:10px}.square .piece{font-size:clamp(27px,10vw,48px)}}
+
+/* HT Chess 2.2 */
+:root{--glass:rgba(29,52,82,.70);--glass2:rgba(255,255,255,.12);--line:rgba(190,225,255,.30);--muted:#c0d3e7}
+body{background:radial-gradient(ellipse at 18% 10%,#28679b 0,transparent 38%),radial-gradient(ellipse at 85% 75%,#394b91 0,transparent 40%),linear-gradient(145deg,#0b1c31,#16395b 55%,#101b39)}
+.panel{background:rgba(35,59,89,.74);border-color:rgba(205,232,255,.30);box-shadow:0 18px 55px #0004,inset 0 1px #ffffff24}
+.player-card{padding:7px 8px 10px;border-radius:13px;background:linear-gradient(110deg,rgba(210,231,255,.16),rgba(117,166,220,.07));border:1px solid rgba(220,239,255,.16);margin:0 0 12px}
+.player-card.user-card{margin:12px 0 0}.player-card .avatar{width:39px;height:39px;flex:0 0 39px;border-radius:7px;background:linear-gradient(145deg,#e6edf6,#b9c8d9);color:#34465c;font-size:23px;box-shadow:0 2px 7px #0003}
+.player-card .user-avatar{background:linear-gradient(145deg,#d9e9ff,#9bbde3)}.player-meta{min-width:0;flex:1}
+.player-name{display:flex;align-items:center;gap:6px;line-height:1.2}.player-name strong{font-size:14px;color:#f5f9ff}.flag{font-size:13px}
+.player-captures{display:flex;align-items:center;gap:8px;min-height:19px;margin:3px 0 1px;color:#dbeaff}
+.player-captures span{font-family:"Segoe UI Symbol","Noto Sans Symbols 2",serif;font-size:17px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(420px,72vw)}
+.player-captures b{font-size:13px;color:#d7e8ff;font-weight:800;white-space:nowrap}.player-card small{color:#b9cce0;font-size:10px}
+.board-wrap{box-shadow:0 14px 32px #0005,0 0 0 4px #ffffff20}
+.drag-ghost{position:fixed;left:0;top:0;z-index:99999;pointer-events:none;font-family:"Segoe UI Symbol","Noto Sans Symbols 2",serif;font-size:clamp(42px,7vw,72px);line-height:1;transform:translate(-50%,-55%);filter:drop-shadow(0 7px 8px #0008);will-change:left,top}
+.square.drag-source .piece{opacity:.18}.square{cursor:grab}.square:active{cursor:grabbing}
+
 </style>
 </head>
 <body>
@@ -67,15 +83,14 @@ body[data-piece="minimal"] .square .piece{font-family:ui-monospace,monospace;fon
 <header><div class="brand"><div class="logo">♞</div><div><h1>HT Chess</h1><p>Think · Play · Improve</p></div></div><div class="pill">✦ LIQUID GLASS EDITION</div></header>
 <main class="layout">
 <section class="panel board-panel">
- <div class="player"><div class="avatar">🤖</div><div><strong>HT Engine</strong><small id="engineLabelTop">Máy tính · Trung bình · Đen</small></div></div>
+ <div class="player player-card opponent-card"><div class="avatar">♟</div><div class="player-meta"><div class="player-name"><strong>HT Engine</strong><span class="flag">🤖</span></div><div class="player-captures"><span id="blackTrophies"></span><b id="blackAdvantage"></b></div><small id="engineLabelTop">Máy tính · Trung bình · Đen</small></div></div>
  <div class="board-wrap"><div id="board" class="board" aria-label="Bàn cờ vua"></div><div class="promotion" id="promotion"></div><div class="end-overlay" id="endOverlay"><div class="end-card"><strong id="endTitle">Ván đấu kết thúc</strong><p id="endText"></p><button class="btn primary" id="endNew" style="margin-top:14px">Ván mới</button></div></div></div>
  <div class="board-footer"><span id="turnText">Trắng đi trước</span><span>♙ Trắng&nbsp;&nbsp; ♟ Đen</span></div>
- <div class="player" style="padding:13px 4px 0"><div class="avatar">♙</div><div><strong>Bạn</strong><small>Trắng · Người chơi</small></div></div>
+ <div class="player player-card user-card"><div class="avatar user-avatar">♙</div><div class="player-meta"><div class="player-name"><strong>HoangThai03</strong><span class="flag">🇻🇳</span></div><div class="player-captures"><span id="whiteTrophies"></span><b id="whiteAdvantage"></b></div><small>Trắng · Người chơi</small></div></div>
 </section>
 <aside class="panel side">
  <div class="status"><strong id="statusTitle">Sẵn sàng khai cuộc</strong><p id="statusSub">Bạn cầm quân Trắng. Nhấn hoặc kéo quân đến ô muốn đi.</p></div>
   <div class="status"><strong>♜ ELO của bạn</strong><p><span id="eloValue" style="font-size:25px;font-weight:850;color:#8fd2ff">100</span> <span id="eloChange" style="margin-left:8px"></span></p><p id="eloSub">Mức khởi đầu: 100 ELO · Điểm được cập nhật sau mỗi ván.</p></div>
-  <div class="captured-panel"><div class="section-title">Quân đã mất và điểm đã ăn</div><div class="capture-row"><strong>Trắng mất</strong><span class="capture-icons" id="whiteCaptured">—</span><span class="material-score" id="whiteMaterial">0 điểm</span></div><div class="capture-row"><strong>Đen mất</strong><span class="capture-icons" id="blackCaptured">—</span><span class="material-score" id="blackMaterial">0 điểm</span></div><div class="tip" id="materialLead">Hai bên đang cân bằng vật chất.</div></div>
   <div class="field"><label>TÙY CHỈNH GIAO DIỆN</label><div class="custom-grid"><div><label for="themeChoice">Màu giao diện</label><select id="themeChoice"><option value="blue">Đại dương</option><option value="violet">Tím</option><option value="emerald">Ngọc lục bảo</option><option value="rose">Hồng</option></select></div><div><label for="boardChoice">Màu bàn cờ</label><select id="boardChoice"><option value="default">Tiêu chuẩn</option><option value="wood">Gỗ</option><option value="green">Xanh cổ điển</option><option value="blue">Xanh băng</option></select></div><div style="grid-column:1/-1"><label for="pieceChoice">Kiểu quân cờ</label><select id="pieceChoice"><option value="classic">Cổ điển</option><option value="bold">Đậm nét</option><option value="mono">Tối giản (chữ)</option></select></div></div></div>
  <div class="field"><label for="level">ĐỘ KHÓ CỦA MÁY</label><select id="level"><option value="easy">Dễ · Làm quen</option><option value="medium" selected>Trung bình · Thử thách</option><option value="hard">Khó · Chiến thuật</option></select></div>
  <div class="actions"><button class="btn primary" id="newGame">＋ Ván mới</button><button class="btn" id="flip">⇅ Lật bàn cờ</button><button class="btn" id="hint">✧ Gợi ý</button></div>
@@ -108,19 +123,16 @@ body[data-piece="minimal"] .square .piece{font-family:ui-monospace,monospace;fon
    let whiteScore=0,blackScore=0;
    taken.forEach(m=>{
     if(!m.captured)return;
-    const value=points[m.captured];
     const capturedSide=m.color==="w"?"b":"w";
     const icon=glyphSets.classic[capturedSide+m.captured];
     if(capturedSide==="w")whiteLost.push(icon);else blackLost.push(icon);
-    if(m.color==="w")whiteScore+=value;else blackScore+=value;
+    if(m.color==="w")whiteScore+=points[m.captured];else blackScore+=points[m.captured];
    });
-   document.getElementById("whiteCaptured").textContent=whiteLost.join(" ")||"Chưa mất quân";
-   document.getElementById("blackCaptured").textContent=blackLost.join(" ")||"Chưa mất quân";
-   document.getElementById("whiteMaterial").textContent="Đen ăn "+blackScore;
-   document.getElementById("blackMaterial").textContent="Trắng ăn "+whiteScore;
+   document.getElementById("whiteTrophies").textContent=blackLost.join(" ");
+   document.getElementById("blackTrophies").textContent=whiteLost.join(" ");
    const diff=whiteScore-blackScore;
-   document.getElementById("materialLead").textContent=
-    diff>0?"Trắng đang ăn hơn "+diff+" điểm.":diff<0?"Đen đang ăn hơn "+Math.abs(diff)+" điểm.":"Hai bên đang ăn quân ngang điểm.";
+   document.getElementById("whiteAdvantage").textContent=diff>0?"+"+diff:"";
+   document.getElementById("blackAdvantage").textContent=diff<0?"+"+Math.abs(diff):"";
   }
   function settleElo(){
    if(!game.game_over()||eloApplied)return;
@@ -134,29 +146,50 @@ body[data-piece="minimal"] .square .piece{font-family:ui-monospace,monospace;fon
  const files="abcdefgh";
  function squareName(r,c){return files[c]+(8-r)}
  let audioCtx=null;
- function playSound(kind="move"){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audioCtx=audioCtx||new C();if(audioCtx.state==="suspended")audioCtx.resume();const now=audioCtx.currentTime;const notes=kind==="check"?[880,660]:kind==="capture"?[520,330]:kind==="win"?[523,659,784,1046]:kind==="lose"?[440,349,262]:[440];notes.forEach((freq,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=kind==="check"?"square":"sine";o.frequency.value=freq;o.connect(g);g.connect(audioCtx.destination);const t=now+i*.1;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.075,t+.018);g.gain.exponentialRampToValueAtTime(.0001,t+.16);o.start(t);o.stop(t+.17)});}catch(e){}}
+ function playSound(kind="move"){
+  try{
+   const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+   audioCtx=audioCtx||new C();if(audioCtx.state==="suspended")audioCtx.resume();
+   const now=audioCtx.currentTime;
+   const profile=kind==="capture"?{f:155,d:.20,v:.22}:kind==="check"?{f:210,d:.22,v:.20}:kind==="move"?{f:235,d:.14,v:.19}:kind==="win"?{f:310,d:.32,v:.18}:{f:125,d:.28,v:.18};
+   const length=Math.floor(C.sampleRate*.11),buffer=audioCtx.createBuffer(1,length,C.sampleRate),data=buffer.getChannelData(0);
+   for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/length,2.2);
+   const noise=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),ng=audioCtx.createGain();
+   noise.buffer=buffer;filter.type="lowpass";filter.frequency.value=kind==="capture"?1050:1450;filter.Q.value=.7;
+   ng.gain.setValueAtTime(.0001,now);ng.gain.exponentialRampToValueAtTime(profile.v,now+.004);ng.gain.exponentialRampToValueAtTime(.0001,now+.095);
+   noise.connect(filter);filter.connect(ng);ng.connect(audioCtx.destination);noise.start(now);noise.stop(now+.11);
+   const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+   osc.type="triangle";osc.frequency.setValueAtTime(profile.f*1.45,now);osc.frequency.exponentialRampToValueAtTime(profile.f,now+.035);
+   gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(profile.v*.55,now+.006);gain.gain.exponentialRampToValueAtTime(.0001,now+profile.d);
+   osc.connect(gain);gain.connect(audioCtx.destination);osc.start(now);osc.stop(now+profile.d);
+  }catch(e){}
+ }
 
- let dragInfo=null;
+ let dragInfo=null,dragGhost=null,suppressClick=false;
+ function removeDragGhost(){if(dragGhost){dragGhost.remove();dragGhost=null;}board.querySelectorAll(".drag-source").forEach(el=>el.classList.remove("drag-source"));}
  board.addEventListener("pointerdown",e=>{
   const cell=e.target.closest(".square");
   if(!cell||busy||game.game_over()||game.turn()!=="w")return;
-  const from=cell.dataset.sq,piece=game.get(from);
-  if(!piece||piece.color!=="w")return;
-  dragInfo={from,x:e.clientX,y:e.clientY,pointerId:e.pointerId};
+  const from=cell.dataset.sq,piece=game.get(from);if(!piece||piece.color!=="w")return;
+  dragInfo={from,x:e.clientX,y:e.clientY,moved:false};
+  dragGhost=document.createElement("div");dragGhost.className="drag-ghost";dragGhost.textContent=activeGlyphs["w"+piece.type];
+  document.body.appendChild(dragGhost);dragGhost.style.left=e.clientX+"px";dragGhost.style.top=e.clientY+"px";cell.classList.add("drag-source");
+ },{passive:true});
+ document.addEventListener("pointermove",e=>{
+  if(!dragInfo||!dragGhost)return;
+  if(Math.hypot(e.clientX-dragInfo.x,e.clientY-dragInfo.y)>4)dragInfo.moved=true;
+  dragGhost.style.left=e.clientX+"px";dragGhost.style.top=e.clientY+"px";
  },{passive:true});
  document.addEventListener("pointerup",e=>{
   if(!dragInfo)return;
-  const info=dragInfo;dragInfo=null;
-  const moved=Math.hypot(e.clientX-info.x,e.clientY-info.y)>8;
+  const info=dragInfo;dragInfo=null;removeDragGhost();const moved=info.moved;
+  suppressClick=moved;if(moved)setTimeout(()=>{suppressClick=false},100);
   if(!moved||busy||game.game_over()||game.turn()!=="w")return;
-  const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.(".square");
-  if(!target)return;
-  const to=target.dataset.sq;
-  const choices=game.moves({square:info.from,verbose:true}).filter(m=>m.to===to);
+  const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.(".square");if(!target)return;
+  const to=target.dataset.sq,choices=game.moves({square:info.from,verbose:true}).filter(m=>m.to===to);
   if(!choices.length)return;
   selected=info.from;legal=game.moves({square:info.from,verbose:true});
-  if(choices.some(m=>m.flags.includes("p")))showPromotion(to);
-  else makeMove({from:info.from,to});
+  if(choices.some(m=>m.flags.includes("p")))showPromotion(to);else makeMove({from:info.from,to});
  },{passive:true});
 
  function render(){
@@ -170,7 +203,7 @@ body[data-piece="minimal"] .square .piece{font-family:ui-monospace,monospace;fon
    if(legal.some(m=>m.to===sq)){const mark=document.createElement("i");mark.className=p?"capture-mark":"dot";el.appendChild(mark)}
    if(ci===0){const co=document.createElement("span");co.className="coord rank";co.textContent=String(flipped?ri+1:8-ri);el.appendChild(co)}
    if(ri===7){const co=document.createElement("span");co.className="coord file";co.textContent=files[c];el.appendChild(co)}
-   el.addEventListener("click",()=>onSquare(sq));board.appendChild(el);
+   el.addEventListener("click",()=>{if(!suppressClick)onSquare(sq)});board.appendChild(el);
   })});
   renderMoves();updateStatus();updateCaptured();settleElo();
  }
