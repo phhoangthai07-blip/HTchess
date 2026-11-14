@@ -1,241 +1,2393 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HT Chess — Play & Think</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-<style>
-:root{--bg:#071426;--glass:rgba(17,34,58,.66);--glass2:rgba(255,255,255,.075);--line:rgba(180,220,255,.2);--text:#edf6ff;--muted:#9db2ca;--blue:#63b9ff;--accent:#7c9cff;--light:#e8edf2;--dark:#66839d}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(ellipse at 15% 12%,#174a77 0,transparent 35%),radial-gradient(ellipse at 85% 80%,#202b69 0,transparent 36%),linear-gradient(145deg,#06101e,#0b1e36 55%,#080f20);overflow-x:hidden}
-body:before,body:after{content:"";position:fixed;inset:-30%;pointer-events:none;z-index:-1;background:radial-gradient(circle,rgba(79,174,255,.15) 0 1px,transparent 2px);background-size:68px 68px;animation:drift 45s linear infinite}
-body:after{background-size:113px 113px;opacity:.5;animation-direction:reverse;animation-duration:70s}
-@keyframes drift{to{transform:translate3d(70px,-90px,0) rotate(8deg)}}
-button,select{font:inherit;color:inherit}.app{width:min(1180px,100%);margin:auto;padding:28px 22px 40px}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;gap:16px}.brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;font-size:28px;background:linear-gradient(145deg,rgba(116,190,255,.3),rgba(80,100,210,.2));border:1px solid var(--line);box-shadow:0 8px 28px #0005,inset 0 1px #ffffff40}.brand h1{font-size:21px;margin:0;letter-spacing:.3px}.brand p{margin:3px 0 0;color:var(--muted);font-size:12px;letter-spacing:1.5px;text-transform:uppercase}
-.pill{padding:9px 13px;border:1px solid var(--line);border-radius:99px;background:var(--glass2);color:#cfe8ff;font-size:12px;backdrop-filter:blur(18px)}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:22px;align-items:start}
-.panel{background:var(--glass);border:1px solid var(--line);border-radius:24px;box-shadow:0 18px 60px #0005,inset 0 1px #ffffff15;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
-.board-panel{padding:clamp(12px,2vw,22px)}
-.player{display:flex;align-items:center;gap:11px;padding:4px 4px 13px}.avatar{width:36px;height:36px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#426b91,#213b5b);border:1px solid #ffffff30;font-size:19px}.player strong{font-size:14px}.player small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
-.board-wrap{width:100%;max-width:690px;margin:auto;position:relative;border-radius:10px;overflow:hidden;box-shadow:0 18px 40px #0008,0 0 0 5px #ffffff12;touch-action:manipulation}
-.board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));width:100%;aspect-ratio:1;user-select:none;min-width:0;min-height:0}
-.square{position:relative;display:grid;place-items:center;border:0;padding:0;margin:0;width:100%;height:100%;min-width:0;min-height:0;overflow:hidden;cursor:pointer;transition:filter .12s,transform .12s}
-.square.light{background:#e6edf2}.square.dark{background:#64819a}.square:active{filter:brightness(1.13);transform:scale(.96)}.square{touch-action:none;-webkit-user-select:none;user-select:none}
-.square.in-check{background:#ef4444!important;animation:kingShake .42s ease-in-out infinite;box-shadow:inset 0 0 0 4px #ff2020,0 0 20px #ef444488;z-index:3}
-.square.in-check .piece{animation:piecePulse .7s ease-in-out infinite;filter:drop-shadow(0 0 8px #ff1616)}
-@keyframes kingShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
-@keyframes piecePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
-.square.selected{background:#e9d45d!important}.square.last{box-shadow:inset 0 0 0 999px rgba(255,220,75,.25)}
-.square .piece{font-family:"Segoe UI Symbol","Noto Sans Symbols 2",serif;font-size:clamp(28px,6.2vw,64px);line-height:1;z-index:1;filter:drop-shadow(0 2px 1px #0004);transition:transform .16s cubic-bezier(.2,1.5,.4,1)}
-.square:active .piece{transform:scale(1.16)}
-.white-piece{color:#fff;text-shadow:0 1px 2px #17283a,1px 0 #26384b,-1px 0 #26384b,0 -1px #26384b}.black-piece{color:#172331;text-shadow:0 1px 1px #ffffff70}
-.coord{position:absolute;font-size:10px;font-weight:700;opacity:.8;z-index:2;pointer-events:none}.rank{top:3px;left:4px}.file{bottom:2px;right:4px}.light .coord{color:#52677a}.dark .coord{color:#f1f5f9}
-.dot{position:absolute;width:25%;height:25%;border-radius:50%;background:#183c3d88;z-index:2;pointer-events:none}.capture-mark{position:absolute;inset:4%;border:4px solid #173d3d66;border-radius:50%;z-index:2;pointer-events:none}
-.board-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;color:var(--muted);font-size:12px}
-.side{padding:20px;display:flex;flex-direction:column;gap:17px}.section-title{font-size:12px;text-transform:uppercase;letter-spacing:1.3px;color:#a9c6e3;font-weight:750;margin-bottom:10px}
-.status{padding:14px;border-radius:17px;background:linear-gradient(135deg,rgba(79,157,226,.17),rgba(116,119,255,.09));border:1px solid #91caff32}.status strong{font-size:15px}.status p{margin:5px 0 0;font-size:12px;color:var(--muted)}
-.field{display:flex;flex-direction:column;gap:8px}.field label{font-size:12px;color:var(--muted)}select{width:100%;padding:12px 14px;border-radius:13px;background:#122b45;border:1px solid var(--line);outline:none}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{border:1px solid var(--line);background:rgba(255,255,255,.08);border-radius:13px;padding:11px 12px;cursor:pointer;transition:transform .16s cubic-bezier(.2,1.5,.4,1),background .2s,box-shadow .2s;font-size:13px}.btn:hover{background:rgba(112,184,255,.17);box-shadow:0 6px 18px #0003}.btn:active{transform:scale(.94)}.btn.primary{background:linear-gradient(135deg,#398bd0,#536bd0);border-color:#8acaff66;box-shadow:0 7px 22px #2f75bb44}.btn:disabled{opacity:.35;cursor:not-allowed}
-.moves{height:210px;overflow:auto;border-radius:14px;background:#07172a70;border:1px solid #ffffff12;padding:7px}.move-row{display:grid;grid-template-columns:32px 1fr 1fr;gap:7px;padding:7px 8px;border-radius:8px;font-size:13px}.move-row:nth-child(odd){background:#ffffff08}.move-no{color:#7893ad}.move-cell{font-weight:650}
-.tip{font-size:11px;line-height:1.6;color:var(--muted)}.toast{min-height:18px;color:#ffc8a8;font-size:12px}
-.end-overlay{display:none;position:absolute;inset:0;z-index:6;align-items:center;justify-content:center;text-align:center;padding:20px;background:rgba(4,13,27,.72);backdrop-filter:blur(12px)}.end-overlay.show{display:flex}.end-card{max-width:90%;padding:22px 26px;border:1px solid #ffffff35;border-radius:22px;background:rgba(22,43,68,.88);box-shadow:0 18px 55px #0008}.end-card strong{display:block;font-size:clamp(20px,4vw,32px);margin-bottom:8px}.end-card p{margin:0;color:#d1e4f5;font-size:14px}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Cờ Vua Neo - Wood Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-.captured-panel{display:grid;gap:10px;padding:13px;border-radius:16px;background:#07172a70;border:1px solid #ffffff12}
-.capture-row{display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:8px;font-size:13px}
-.capture-icons{font-size:19px;letter-spacing:1px;overflow-wrap:anywhere}.material-score{font-weight:800;color:#8fd2ff;white-space:nowrap}
-.custom-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-body[data-theme="blue"]{background:radial-gradient(ellipse at 15% 12%,#174a77,transparent 35%),radial-gradient(ellipse at 85% 80%,#202b69,transparent 36%),linear-gradient(145deg,#06101e,#0b1e36 55%,#080f20)}
-body[data-theme="violet"]{background:radial-gradient(ellipse at 15% 12%,#503477,transparent 35%),radial-gradient(ellipse at 85% 80%,#302b69,transparent 36%),linear-gradient(145deg,#120b20,#25183d 55%,#100d20)}
-body[data-theme="emerald"]{background:radial-gradient(ellipse at 15% 12%,#145b50,transparent 35%),radial-gradient(ellipse at 85% 80%,#174b50,transparent 36%),linear-gradient(145deg,#061a19,#0b302d 55%,#081b20)}
-body[data-theme="rose"]{background:radial-gradient(ellipse at 15% 12%,#71364c,transparent 35%),radial-gradient(ellipse at 85% 80%,#512b62,transparent 36%),linear-gradient(145deg,#210e1b,#3a1832 55%,#170d20)}
-body[data-board="wood"] .square.light{background:#f0d6ad}body[data-board="wood"] .square.dark{background:#a66d43}
-body[data-board="green"] .square.light{background:#eeeed2}body[data-board="green"] .square.dark{background:#769656}
-body[data-board="blue"] .square.light{background:#dceaf4}body[data-board="blue"] .square.dark{background:#6289ad}
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #262421;
+      color: #e5e5e5;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
 
-body[data-theme="rose"] .panel{border-color:rgba(253,164,175,.3)}
-body[data-theme="emerald"] .panel{border-color:rgba(110,231,183,.28)}
-body[data-piece="bold"] .square .piece{font-weight:900;text-shadow:0 2px 2px #0008,0 0 8px #ffffff55}
-body[data-piece="minimal"] .square .piece{font-family:ui-monospace,monospace;font-size:clamp(22px,5vw,48px);font-weight:800}
-.promotion{display:none;position:absolute;inset:0;background:#061426bb;backdrop-filter:blur(8px);z-index:5;align-items:center;justify-content:center;gap:9px}.promotion.show{display:flex}.promotion button{font-size:35px;width:58px;height:62px;border-radius:14px;background:#e8eef4;color:#172331;border:0;cursor:pointer;box-shadow:0 8px 20px #0005}.promotion button:active{transform:scale(.9)}
-@media(max-width:850px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.side .moves-section{grid-column:1/-1}.moves{height:150px}}
-@media(max-width:520px){.app{padding:17px 12px 28px}.side{display:flex;padding:15px}.brand h1{font-size:18px}.pill{font-size:10px}.board-panel{padding:10px}.square .piece{font-size:clamp(27px,10vw,48px)}}
-</style>
+    /* Bàn cờ vân gỗ tự nhiên giống hệt ảnh mẫu */
+    .chess-board-wrapper {
+      position: relative;
+      width: min(94vw, 560px);
+      aspect-ratio: 1 / 1;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4);
+      border-radius: 4px;
+      overflow: hidden;
+      background: #7a5230;
+      touch-action: none;
+    }
+
+    .chess-board {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      width: 100%;
+      height: 100%;
+    }
+
+    .square {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* =========================================================================
+       4 CHỦ ĐỀ BÀN CỜ (BOARD THEMES)
+       ========================================================================= */
+    /* 1. Gỗ Neo (Mặc định giống hệt ảnh mẫu) */
+    .theme-wood .square.light {
+      background-color: #d6b485;
+      background-image:
+        repeating-linear-gradient(90deg, rgba(165, 118, 62, 0.06) 0px, rgba(165, 118, 62, 0.06) 1px, transparent 1px, transparent 4px),
+        repeating-linear-gradient(88deg, rgba(255, 244, 224, 0.14) 0px, rgba(255, 244, 224, 0.14) 2px, rgba(150, 102, 48, 0.08) 2px, rgba(150, 102, 48, 0.08) 7px),
+        radial-gradient(ellipse at 30% 40%, rgba(255, 242, 218, 0.25), rgba(178, 132, 74, 0.22));
+    }
+    .theme-wood .square.dark {
+      background-color: #845934;
+      background-image:
+        repeating-linear-gradient(90deg, rgba(48, 26, 10, 0.12) 0px, rgba(48, 26, 10, 0.12) 1px, transparent 1px, transparent 3px),
+        repeating-linear-gradient(91deg, rgba(182, 130, 82, 0.09) 0px, rgba(182, 130, 82, 0.09) 3px, rgba(52, 28, 11, 0.13) 3px, rgba(52, 28, 11, 0.13) 8px),
+        radial-gradient(ellipse at 65% 55%, rgba(162, 112, 66, 0.18), rgba(62, 36, 16, 0.25));
+    }
+    .theme-wood .square.light .coord-rank,
+    .theme-wood .square.light .coord-file { color: #7c532f; }
+    .theme-wood .square.dark .coord-rank,
+    .theme-wood .square.dark .coord-file { color: #dec096; }
+
+    /* 2. Xanh Ngọc Lục Bảo (Tournament Green) */
+    .theme-green .square.light { background-color: #eeeed2; }
+    .theme-green .square.dark { background-color: #769656; }
+    .theme-green .square.light .coord-rank,
+    .theme-green .square.light .coord-file { color: #769656; }
+    .theme-green .square.dark .coord-rank,
+    .theme-green .square.dark .coord-file { color: #eeeed2; }
+
+    /* 3. Đá Cẩm Thạch Xanh (Ocean Marble) */
+    .theme-marble .square.light {
+      background-color: #dee3e6;
+      background-image: radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.55), rgba(198, 208, 214, 0.35));
+    }
+    .theme-marble .square.dark {
+      background-color: #8ca2ad;
+      background-image: radial-gradient(circle at 70% 60%, rgba(165, 186, 196, 0.35), rgba(108, 132, 144, 0.4));
+    }
+    .theme-marble .square.light .coord-rank,
+    .theme-marble .square.light .coord-file { color: #677f8b; }
+    .theme-marble .square.dark .coord-rank,
+    .theme-marble .square.dark .coord-file { color: #e8eef1; }
+
+    /* 4. Gỗ Đỏ Hoàng Gia (Mahogany) */
+    .theme-mahogany .square.light {
+      background-color: #f0d9b5;
+      background-image: repeating-linear-gradient(90deg, rgba(181, 136, 99, 0.05) 0px, rgba(181, 136, 99, 0.05) 2px, transparent 2px, transparent 6px);
+    }
+    .theme-mahogany .square.dark {
+      background-color: #b58863;
+      background-image: repeating-linear-gradient(90deg, rgba(95, 58, 32, 0.09) 0px, rgba(95, 58, 32, 0.09) 2px, transparent 2px, transparent 5px);
+    }
+    .theme-mahogany .square.light .coord-rank,
+    .theme-mahogany .square.light .coord-file { color: #9c6f4a; }
+    .theme-mahogany .square.dark .coord-rank,
+    .theme-mahogany .square.dark .coord-file { color: #f5e4c8; }
+
+    /* Các lớp tô màu trạng thái ô cờ */
+    .square-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      transition: background-color 0.12s ease;
+    }
+
+    /* Nước đi vừa thực hiện */
+    .square.last-move .square-overlay {
+      background-color: rgba(245, 198, 48, 0.50);
+    }
+
+    /* Ô đang được chọn */
+    .square.selected .square-overlay {
+      background-color: rgba(245, 205, 55, 0.62);
+    }
+
+    /* Ô đang rê quân cờ qua khi kéo (Drag hover) */
+    .square.drag-over::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 3.5px solid rgba(255, 255, 255, 0.85);
+      box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.45);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Ô Vua bị chiếu / chiếu hết: đỏ san hô cảnh báo */
+    .square.in-check .square-overlay {
+      background: radial-gradient(circle, rgba(242, 72, 62, 0.94) 0%, rgba(226, 58, 48, 0.85) 72%, rgba(210, 45, 38, 0.82) 100%);
+      animation: checkPulse 1.3s ease-in-out infinite;
+    }
+
+    @keyframes checkPulse {
+      0%, 100% { opacity: 0.92; }
+      50% { opacity: 1; }
+    }
+
+    /* Gợi ý nước đi hợp lệ */
+    .move-hint-dot {
+      position: absolute;
+      width: 31%;
+      height: 31%;
+      border-radius: 50%;
+      background-color: rgba(26, 24, 21, 0.25);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .move-hint-capture {
+      position: absolute;
+      width: 86%;
+      height: 86%;
+      border-radius: 50%;
+      border: 5px solid rgba(26, 24, 21, 0.28);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    /* Tọa độ bàn cờ */
+    .coord-rank {
+      position: absolute;
+      top: 4%;
+      left: 6%;
+      font-size: clamp(10px, 2.2vw, 13px);
+      font-weight: 700;
+      line-height: 1;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .coord-file {
+      position: absolute;
+      bottom: 4%;
+      right: 6%;
+      font-size: clamp(10px, 2.2vw, 13px);
+      font-weight: 700;
+      line-height: 1;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Quân cờ SVG */
+    .piece-container {
+      position: relative;
+      width: 86%;
+      height: 86%;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.12s ease;
+      filter: drop-shadow(0 2.5px 1.8px rgba(0, 0, 0, 0.32));
+      cursor: grab;
+    }
+
+    .piece-container.dragging-source {
+      opacity: 0.25;
+    }
+
+    .piece-container svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    /* Quân cờ nổi bám sát con trỏ khi kéo thả 60fps */
+    #drag-ghost {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transform: translate3d(-50%, -50%, 0) scale(1.16);
+      filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.52));
+      will-change: transform, left, top;
+    }
+
+    #drag-ghost svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* =========================================================================
+       HIỆU ỨNG VUA GIẬT NHẸ KHI BỊ CHIẾU THƯỜNG (CHECK SHAKE)
+       ========================================================================= */
+    .piece-container.checked-king-shake {
+      animation: kingCheckJerk 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) 1;
+    }
+
+    @keyframes kingCheckJerk {
+      0%   { transform: translateX(0) rotate(0deg); }
+      16%  { transform: translateX(-8%) rotate(-4.5deg); }
+      34%  { transform: translateX(8%) rotate(4.5deg); }
+      52%  { transform: translateX(-5.5%) rotate(-3deg); }
+      70%  { transform: translateX(4.5%) rotate(2.5deg); }
+      86%  { transform: translateX(-2%) rotate(-1deg); }
+      100% { transform: translateX(0) rotate(0deg); }
+    }
+
+    /* Hiệu ứng Vua bị chiếu hết nằm ngang 90 độ giống ảnh 1 */
+    .piece-container.checkmated-king {
+      animation: kingTopple 0.65s cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
+      transform-origin: 52% 62%;
+    }
+
+    @keyframes kingTopple {
+      0% {
+        transform: rotate(0deg) translateY(0);
+      }
+      55% {
+        transform: rotate(96deg) translate(4%, -4%);
+      }
+      80% {
+        transform: rotate(87deg) translate(3%, -3%);
+      }
+      100% {
+        transform: rotate(90deg) translate(3%, -3%);
+      }
+    }
+
+    /* Huy hiệu kết thúc ván (Vua đổ đỏ & Vương miện xanh lá giống ảnh 1) */
+    .endgame-badge {
+      position: absolute;
+      top: -10%;
+      right: -10%;
+      width: 36%;
+      height: 36%;
+      border-radius: 50%;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+      animation: badgePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s backwards;
+      pointer-events: none;
+    }
+
+    .badge-loser {
+      background-color: #e53935;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-winner {
+      background-color: #7cb342;
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+    }
+
+    @keyframes badgePop {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Nút bấm giao diện hiện đại */
+    .btn-control {
+      background: #33302d;
+      border: 1px solid #45413d;
+      color: #e8e6e3;
+      transition: all 0.15s ease;
+    }
+    .btn-control:hover:not(:disabled) {
+      background: #403c38;
+      border-color: #5c5752;
+      transform: translateY(-1px);
+    }
+    .btn-control:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    .btn-control:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .level-pill.active {
+      background: #81b64c;
+      color: #ffffff;
+      border-color: #95cc5c;
+      box-shadow: 0 2px 8px rgba(129, 182, 76, 0.35);
+    }
+
+    .theme-option-btn.active,
+    .piece-option-btn.active {
+      border-color: #81b64c;
+      background-color: #36332f;
+      box-shadow: 0 0 0 1px #81b64c;
+    }
+
+    /* Thanh cuộn gọn cho lịch sử nước đi */
+    .pgn-scroll::-webkit-scrollbar {
+      height: 4px;
+    }
+    .pgn-scroll::-webkit-scrollbar-track {
+      background: #1c1a18;
+    }
+    .pgn-scroll::-webkit-scrollbar-thumb {
+      background: #46423d;
+      border-radius: 4px;
+    }
+
+    /* Popup phong cấp Tốt */
+    .promo-modal {
+      background: rgba(24, 22, 20, 0.78);
+      backdrop-filter: blur(4px);
+    }
+
+    .promo-choice {
+      background: #d6b485;
+      border: 2px solid #4a3520;
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    .promo-choice:hover {
+      background: #ebd0a8;
+      transform: scale(1.07);
+    }
+  </style>
 </head>
-<body>
-<div class="app">
-<header><div class="brand"><div class="logo">♞</div><div><h1>HT Chess</h1><p>Think · Play · Improve</p></div></div><div class="pill">✦ LIQUID GLASS EDITION</div></header>
-<main class="layout">
-<section class="panel board-panel">
- <div class="player"><div class="avatar">🤖</div><div><strong>HT Engine</strong><small id="engineLabelTop">Máy tính · Trung bình · Đen</small></div></div>
- <div class="board-wrap"><div id="board" class="board" aria-label="Bàn cờ vua"></div><div class="promotion" id="promotion"></div><div class="end-overlay" id="endOverlay"><div class="end-card"><strong id="endTitle">Ván đấu kết thúc</strong><p id="endText"></p><button class="btn primary" id="endNew" style="margin-top:14px">Ván mới</button></div></div></div>
- <div class="board-footer"><span id="turnText">Trắng đi trước</span><span>♙ Trắng&nbsp;&nbsp; ♟ Đen</span></div>
- <div class="player" style="padding:13px 4px 0"><div class="avatar">♙</div><div><strong>Bạn</strong><small>Trắng · Người chơi</small></div></div>
-</section>
-<aside class="panel side">
- <div class="status"><strong id="statusTitle">Sẵn sàng khai cuộc</strong><p id="statusSub">Bạn cầm quân Trắng. Nhấn hoặc kéo quân đến ô muốn đi.</p></div>
-  <div class="status"><strong>♜ ELO của bạn</strong><p><span id="eloValue" style="font-size:25px;font-weight:850;color:#8fd2ff">100</span> <span id="eloChange" style="margin-left:8px"></span></p><p id="eloSub">Mức khởi đầu: 100 ELO · Điểm được cập nhật sau mỗi ván.</p></div>
-  <div class="captured-panel"><div class="section-title">Quân đã mất và điểm đã ăn</div><div class="capture-row"><strong>Trắng mất</strong><span class="capture-icons" id="whiteCaptured">—</span><span class="material-score" id="whiteMaterial">0 điểm</span></div><div class="capture-row"><strong>Đen mất</strong><span class="capture-icons" id="blackCaptured">—</span><span class="material-score" id="blackMaterial">0 điểm</span></div><div class="tip" id="materialLead">Hai bên đang cân bằng vật chất.</div></div>
-  <div class="field"><label>TÙY CHỈNH GIAO DIỆN</label><div class="custom-grid"><div><label for="themeChoice">Màu giao diện</label><select id="themeChoice"><option value="blue">Đại dương</option><option value="violet">Tím</option><option value="emerald">Ngọc lục bảo</option><option value="rose">Hồng</option></select></div><div><label for="boardChoice">Màu bàn cờ</label><select id="boardChoice"><option value="default">Tiêu chuẩn</option><option value="wood">Gỗ</option><option value="green">Xanh cổ điển</option><option value="blue">Xanh băng</option></select></div><div style="grid-column:1/-1"><label for="pieceChoice">Kiểu quân cờ</label><select id="pieceChoice"><option value="classic">Cổ điển</option><option value="bold">Đậm nét</option><option value="mono">Tối giản (chữ)</option></select></div></div></div>
- <div class="field"><label for="level">ĐỘ KHÓ CỦA MÁY</label><select id="level"><option value="easy">Dễ · Làm quen</option><option value="medium" selected>Trung bình · Thử thách</option><option value="hard">Khó · Chiến thuật</option></select></div>
- <div class="actions"><button class="btn primary" id="newGame">＋ Ván mới</button><button class="btn" id="flip">⇅ Lật bàn cờ</button><button class="btn" id="hint">✧ Gợi ý</button></div>
- <div class="moves-section"><div class="section-title">Lịch sử nước đi</div><div class="moves" id="moves"><div class="tip">Các nước đi sẽ xuất hiện tại đây.</div></div></div>
- <div class="toast" id="toast"></div>
- <div class="tip">Mẹo: Nhấn quân rồi chọn ô đích, hoặc kéo quân bằng chuột/ngón tay. Danh sách quân mất và điểm ăn được cập nhật tự động.</div>
-</aside>
-</main>
-</div>
-<script>
-(() => {
- if(typeof Chess==="undefined"){document.getElementById("statusTitle").textContent="Không tải được bộ luật cờ";document.getElementById("statusSub").textContent="Hãy kết nối Internet rồi tải lại trang.";return;}
- const game=new Chess();
- const endOverlay=document.getElementById("endOverlay"),endTitle=document.getElementById("endTitle"),endText=document.getElementById("endText");
- const board=document.getElementById("board"),movesBox=document.getElementById("moves"),statusTitle=document.getElementById("statusTitle"),statusSub=document.getElementById("statusSub"),turnText=document.getElementById("turnText"),toast=document.getElementById("toast"),level=document.getElementById("level"),promotion=document.getElementById("promotion");
- const glyph={wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟"};
- const values={p:100,n:320,b:335,r:500,q:900,k:20000};
- let selected=null,legal=[],lastMove=null,flipped=false,busy=false,history=[],hintMove=null;
-  let elo=Number(localStorage.getItem("ht_chess_elo")||100),eloApplied=false;
-  const glyphSets={
-   classic:{wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟"},
-   bold:{wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟"},
-   mono:{wk:"K",wq:"Q",wr:"R",wb:"B",wn:"N",wp:"P",bk:"k",bq:"q",br:"r",bb:"b",bn:"n",bp:"p"}
-  };
-  let activeGlyphs=glyphSets.classic;
-  const points={p:1,n:3,b:3,r:5,q:9,k:0};
-  function updateElo(change=""){document.getElementById("eloValue").textContent=elo;document.getElementById("eloChange").textContent=change;}
-  function updateCaptured(){
-   const taken=game.history({verbose:true}),whiteLost=[],blackLost=[];
-   let whiteScore=0,blackScore=0;
-   taken.forEach(m=>{
-    if(!m.captured)return;
-    const value=points[m.captured];
-    const capturedSide=m.color==="w"?"b":"w";
-    const icon=glyphSets.classic[capturedSide+m.captured];
-    if(capturedSide==="w")whiteLost.push(icon);else blackLost.push(icon);
-    if(m.color==="w")whiteScore+=value;else blackScore+=value;
-   });
-   document.getElementById("whiteCaptured").textContent=whiteLost.join(" ")||"Chưa mất quân";
-   document.getElementById("blackCaptured").textContent=blackLost.join(" ")||"Chưa mất quân";
-   document.getElementById("whiteMaterial").textContent="Đen ăn "+blackScore;
-   document.getElementById("blackMaterial").textContent="Trắng ăn "+whiteScore;
-   const diff=whiteScore-blackScore;
-   document.getElementById("materialLead").textContent=
-    diff>0?"Trắng đang ăn hơn "+diff+" điểm.":diff<0?"Đen đang ăn hơn "+Math.abs(diff)+" điểm.":"Hai bên đang ăn quân ngang điểm.";
-  }
-  function settleElo(){
-   if(!game.game_over()||eloApplied)return;
-   const score=game.in_checkmate()?(game.turn()==="b"?1:0):0.5;
-   const opponent={easy:100,medium:500,hard:1000}[level.value]||500;
-   const expected=1/(1+Math.pow(10,(opponent-elo)/400)),delta=Math.round(16*(score-expected));
-   elo=Math.max(0,elo+delta);eloApplied=true;localStorage.setItem("ht_chess_elo",String(elo));
-   updateElo((delta>=0?"+":"")+delta+" ELO");
-   document.getElementById("eloSub").textContent="Đối thủ "+opponent+" ELO · Đã cập nhật sau ván.";
-  }
- const files="abcdefgh";
- function squareName(r,c){return files[c]+(8-r)}
- let audioCtx=null;
- function playSound(kind="move"){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audioCtx=audioCtx||new C();if(audioCtx.state==="suspended")audioCtx.resume();const now=audioCtx.currentTime;const notes=kind==="check"?[880,660]:kind==="capture"?[520,330]:kind==="win"?[523,659,784,1046]:kind==="lose"?[440,349,262]:[440];notes.forEach((freq,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=kind==="check"?"square":"sine";o.frequency.value=freq;o.connect(g);g.connect(audioCtx.destination);const t=now+i*.1;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.075,t+.018);g.gain.exponentialRampToValueAtTime(.0001,t+.16);o.start(t);o.stop(t+.17)});}catch(e){}}
+<body class="py-3 px-2 sm:py-5">
 
- let dragInfo=null;
- board.addEventListener("pointerdown",e=>{
-  const cell=e.target.closest(".square");
-  if(!cell||busy||game.game_over()||game.turn()!=="w")return;
-  const from=cell.dataset.sq,piece=game.get(from);
-  if(!piece||piece.color!=="w")return;
-  dragInfo={from,x:e.clientX,y:e.clientY,pointerId:e.pointerId};
- },{passive:true});
- document.addEventListener("pointerup",e=>{
-  if(!dragInfo)return;
-  const info=dragInfo;dragInfo=null;
-  const moved=Math.hypot(e.clientX-info.x,e.clientY-info.y)>8;
-  if(!moved||busy||game.game_over()||game.turn()!=="w")return;
-  const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.(".square");
-  if(!target)return;
-  const to=target.dataset.sq;
-  const choices=game.moves({square:info.from,verbose:true}).filter(m=>m.to===to);
-  if(!choices.length)return;
-  selected=info.from;legal=game.moves({square:info.from,verbose:true});
-  if(choices.some(m=>m.flags.includes("p")))showPromotion(to);
-  else makeMove({from:info.from,to});
- },{passive:true});
+  <!-- Quân cờ nổi bám sát con trỏ khi kéo thả -->
+  <div id="drag-ghost"></div>
 
- function render(){
-  board.innerHTML="";
-  const rows=flipped?[7,6,5,4,3,2,1,0]:[0,1,2,3,4,5,6,7];
-  rows.forEach((r,ri)=>{const cols=flipped?[7,6,5,4,3,2,1,0]:[0,1,2,3,4,5,6,7];cols.forEach((c,ci)=>{
-   const sq=squareName(r,c),p=game.get(sq),el=document.createElement("button");el.className="square "+((r+c)%2===0?"light":"dark");el.dataset.sq=sq;
-   if(selected===sq)el.classList.add("selected");if(lastMove&&(lastMove.from===sq||lastMove.to===sq))el.classList.add("last");
-   if(p){const span=document.createElement("span");span.className="piece "+(p.color==="w"?"white-piece":"black-piece");span.textContent=activeGlyphs[p.color+p.type];el.appendChild(span)}
-   if(game.in_check()&&p&&p.type==="k"&&p.color===game.turn())el.classList.add("in-check");
-   if(legal.some(m=>m.to===sq)){const mark=document.createElement("i");mark.className=p?"capture-mark":"dot";el.appendChild(mark)}
-   if(ci===0){const co=document.createElement("span");co.className="coord rank";co.textContent=String(flipped?ri+1:8-ri);el.appendChild(co)}
-   if(ri===7){const co=document.createElement("span");co.className="coord file";co.textContent=files[c];el.appendChild(co)}
-   el.addEventListener("click",()=>onSquare(sq));board.appendChild(el);
-  })});
-  renderMoves();updateStatus();updateCaptured();settleElo();
- }
- function renderMoves(){const hist=game.history();if(!hist.length){movesBox.innerHTML='<div class="tip">Các nước đi sẽ xuất hiện tại đây.</div>';return}let out="";for(let i=0;i<hist.length;i+=2)out+=`<div class="move-row"><span class="move-no">${i/2+1}.</span><span class="move-cell">${hist[i]||""}</span><span class="move-cell">${hist[i+1]||""}</span></div>`;movesBox.innerHTML=out;movesBox.scrollTop=movesBox.scrollHeight}
- function updateStatus(){
-  const turn=game.turn()==="w"?"Trắng":"Đen";turnText.textContent=game.game_over()?"Ván đấu đã kết thúc":turn+" đang đi";
-  if(game.in_checkmate()){statusTitle.textContent="Chiếu hết!";statusSub.textContent=(game.turn()==="w"?"Máy tính":"Bạn")+" chiến thắng."}
-  else if(game.in_stalemate()||game.in_draw()){statusTitle.textContent="Ván cờ hòa";statusSub.textContent="Không có bên nào giành chiến thắng."}
-  else if(game.in_check()){statusTitle.textContent="Chiếu!";statusSub.textContent=turn+" đang bị chiếu."}
-  else {statusTitle.textContent=busy?"Máy đang suy nghĩ…": "Đến lượt "+turn;statusSub.textContent=game.turn()==="w"?"Chọn quân Trắng để thực hiện nước đi.":"Máy tính đang chuẩn bị nước đi."}
-  if(game.game_over()){endOverlay.classList.add("show");if(game.in_checkmate()){const userWon=game.turn()==="b";endTitle.textContent=userWon?"🎉 Chiếu hết — Bạn thắng!":"♟ Chiếu hết — Máy thắng";endText.textContent=userWon?"Máy không còn nước đi hợp lệ. Chúc mừng bạn!":"Vua của bạn bị chiếu hết. Hãy thử ván khác.";playSound(userWon?"win":"lose")}else{endTitle.textContent="🤝 Ván cờ hòa";endText.textContent=game.in_stalemate()?"Hòa do hết nước đi hợp lệ.":"Ván đấu kết thúc với kết quả hòa.";playSound("draw")}}
- }
- function onSquare(sq){
-  if(busy||game.game_over()||game.turn()!=="w")return;
-  toast.textContent="";
-  const piece=game.get(sq);
-  if(selected&&legal.some(m=>m.to===sq)){
-   const candidates=legal.filter(m=>m.to===sq);
-   if(candidates.some(m=>m.flags.includes("p"))){showPromotion(sq);return}
-   makeMove({from:selected,to:sq});return;
-  }
-  if(piece&&piece.color==="w"){selected=sq;legal=game.moves({square:sq,verbose:true});render();return}
-  selected=null;legal=[];render();
- }
- function showPromotion(to){promotion.innerHTML="";["q","r","b","n"].forEach(type=>{const b=document.createElement("button");b.textContent=glyph["w"+type];b.title=type;b.onclick=()=>{promotion.classList.remove("show");makeMove({from:selected,to,promotion:type})};promotion.appendChild(b)});promotion.classList.add("show")}
- function makeMove(m){const result=game.move(m);if(!result)return;lastMove={from:result.from,to:result.to};selected=null;legal=[];hintMove=null;playSound(game.in_check()?"check":result.captured?"capture":"move");render();if(!game.game_over()&&game.turn()==="b")setTimeout(aiMove,180)}
- function evaluate(g){if(g.in_checkmate())return g.turn()==="w"?-100000:100000;let score=0;const b=g.board();for(let r=0;r<8;r++)for(let c=0;c<8;c++){const p=b[r][c];if(!p)continue;let val=values[p.type];const advance=p.color==="w"?6-r:r-1;if(p.type==="p")val+=advance*8;if(p.type==="n"||p.type==="b")val+=(3.5-Math.abs(3.5-c))*5+(3.5-Math.abs(3.5-r))*4;if(p.type==="q")val+=(3.5-Math.abs(3.5-c))*2;score+=p.color==="w"?val:-val}return score}
- function minimax(g,depth,alpha,beta,maximizing){if(depth===0||g.game_over())return evaluate(g);const ms=g.moves({verbose:true});if(maximizing){let best=-Infinity;for(const m of ms){g.move(m);best=Math.max(best,minimax(g,depth-1,alpha,beta,false));g.undo();alpha=Math.max(alpha,best);if(beta<=alpha)break}return best}else{let best=Infinity;for(const m of ms){g.move(m);best=Math.min(best,minimax(g,depth-1,alpha,beta,true));g.undo();beta=Math.min(beta,best);if(beta<=alpha)break}return best}}
- function aiMove(){
-  if(game.game_over()||game.turn()!=="b")return;busy=true;updateStatus();const difficulty=level.value;const all=game.moves({verbose:true});let chosen;
-  if(difficulty==="easy"){const scored=all.map(m=>{game.move(m);const s=evaluate(game);game.undo();return {m,score:s+Math.random()*260}}).sort((a,b)=>a.score-b.score);chosen=scored[Math.floor(Math.random()*Math.min(5,scored.length))]?.m||all[0]}
-  else{const depth=difficulty==="medium"?2:3;let best=Infinity,candidates=[];for(const m of all){game.move(m);const score=minimax(game,depth-1,-Infinity,Infinity,true);game.undo();if(score<best){best=score;candidates=[m]}else if(score===best)candidates.push(m)}chosen=candidates[Math.floor(Math.random()*candidates.length)]||all[0]}
-  if(chosen){const result=game.move(chosen);lastMove={from:result.from,to:result.to};playSound(game.in_check()?"check":result.captured?"capture":"move")}
-  busy=false;render();
- }
- document.getElementById("newGame").onclick=()=>{game.reset();eloApplied=false;updateElo("");document.getElementById("eloSub").textContent="Mức khởi đầu: 100 ELO · Điểm được cập nhật sau mỗi ván.";endOverlay.classList.remove("show");selected=null;legal=[];lastMove=null;busy=false;promotion.classList.remove("show");toast.textContent="";render();playSound("move")};
- 
- document.getElementById("flip").onclick=()=>{flipped=!flipped;render()};
- document.getElementById("hint").onclick=()=>{if(game.turn()!=="w"||game.game_over())return;const ms=game.moves({verbose:true});let best=-Infinity;for(const m of ms){game.move(m);const s=evaluate(game);game.undo();if(s>best){best=s;hintMove=m}}if(hintMove){selected=hintMove.from;legal=ms.filter(m=>m.from===selected);render();toast.textContent="Gợi ý: "+hintMove.from+" → "+hintMove.to}};
- document.getElementById("endNew").onclick=()=>document.getElementById("newGame").click();
- level.onchange=()=>{
-  const label="Máy tính · "+({easy:"Dễ",medium:"Trung bình",hard:"Khó"}[level.value]);
-  document.getElementById("engineLabelTop").textContent=label+" · Đen";
-  toast.textContent="Đã đổi độ khó cho nước đi tiếp theo.";
- };
- document.getElementById("themeChoice").addEventListener("change",e=>{
-  document.body.dataset.theme=e.target.value;
-  toast.textContent="Đã đổi màu giao diện.";
- });
- document.getElementById("boardChoice").addEventListener("change",e=>{
-  document.body.dataset.board=e.target.value;
-  toast.textContent="Đã đổi màu bàn cờ.";
- });
- document.getElementById("pieceChoice").addEventListener("change",e=>{
-  const style=e.target.value;
-  document.body.dataset.piece=style==="mono"?"minimal":style;
-  activeGlyphs=style==="mono"?glyphSets.mono:glyphSets.classic;
-  render();
-  toast.textContent="Đã đổi kiểu quân cờ.";
- });
- document.body.dataset.theme="blue";
- document.body.dataset.board="default";
- document.body.dataset.piece="classic";
- render();
-})();
-</script>
+  <!-- Thanh tiêu đề, chọn mức độ & nút Cài đặt giao diện -->
+  <div class="w-full max-w-[560px] flex flex-col gap-2 mb-2">
+    <div class="flex flex-wrap items-center justify-between gap-2 bg-[#1e1c1a] px-3 py-2 rounded-xl border border-[#33302c] shadow-md">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-[#81b64c] shadow-[0_0_8px_#81b64c]"></div>
+        <span class="font-bold text-sm sm:text-base tracking-tight text-white">Cờ Vua</span>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <!-- Chọn 3 mức độ AI -->
+        <div class="flex items-center bg-[#2a2724] p-1 rounded-lg border border-[#3b3733]" role="group" aria-label="Mức độ khó">
+          <button id="lvl-1" onclick="setDifficulty(1)" class="level-pill px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-md transition-all text-stone-300">
+            Dễ
+          </button>
+          <button id="lvl-2" onclick="setDifficulty(2)" class="level-pill active px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-md transition-all text-stone-300">
+            Trung bình
+          </button>
+          <button id="lvl-3" onclick="setDifficulty(3)" class="level-pill px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-md transition-all text-stone-300">
+            Khó
+          </button>
+        </div>
+
+        <!-- Nút mở/đóng bảng Tùy chỉnh Bàn cờ & Quân cờ -->
+        <button id="btn-customize-toggle" onclick="toggleCustomizePanel()" class="btn-control p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5" title="Tùy chỉnh bàn cờ & quân cờ">
+          <svg class="w-4 h-4 text-[#95cc5c]" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+          <span class="hidden sm:inline">Giao diện</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bảng Tùy chọn Giao diện Bàn cờ & Bộ Quân cờ (Mở/đóng nhanh không gián đoạn ván đấu) -->
+    <div id="customize-panel" class="hidden bg-[#1e1c1a] p-3 rounded-xl border border-[#3a3631] shadow-xl flex flex-col gap-3">
+      <div>
+        <div class="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-1.5">Chủ đề bàn cờ</div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button id="theme-btn-wood" onclick="setBoardTheme('wood')" class="theme-option-btn active flex items-center gap-2 p-2 rounded-lg bg-[#292623] border border-[#3d3934] text-left transition">
+            <span class="w-5 h-5 rounded shrink-0 border border-black/30 overflow-hidden grid grid-cols-2 grid-rows-2">
+              <span class="bg-[#d6b485]"></span><span class="bg-[#845934]"></span>
+              <span class="bg-[#845934]"></span><span class="bg-[#d6b485]"></span>
+            </span>
+            <span class="text-xs font-semibold text-stone-200 truncate">Gỗ Neo</span>
+          </button>
+
+          <button id="theme-btn-green" onclick="setBoardTheme('green')" class="theme-option-btn flex items-center gap-2 p-2 rounded-lg bg-[#292623] border border-[#3d3934] text-left transition">
+            <span class="w-5 h-5 rounded shrink-0 border border-black/30 overflow-hidden grid grid-cols-2 grid-rows-2">
+              <span class="bg-[#eeeed2]"></span><span class="bg-[#769656]"></span>
+              <span class="bg-[#769656]"></span><span class="bg-[#eeeed2]"></span>
+            </span>
+            <span class="text-xs font-semibold text-stone-200 truncate">Ngọc Lục Bảo</span>
+          </button>
+
+          <button id="theme-btn-marble" onclick="setBoardTheme('marble')" class="theme-option-btn flex items-center gap-2 p-2 rounded-lg bg-[#292623] border border-[#3d3934] text-left transition">
+            <span class="w-5 h-5 rounded shrink-0 border border-black/30 overflow-hidden grid grid-cols-2 grid-rows-2">
+              <span class="bg-[#dee3e6]"></span><span class="bg-[#8ca2ad]"></span>
+              <span class="bg-[#8ca2ad]"></span><span class="bg-[#dee3e6]"></span>
+            </span>
+            <span class="text-xs font-semibold text-stone-200 truncate">Cẩm Thạch</span>
+          </button>
+
+          <button id="theme-btn-mahogany" onclick="setBoardTheme('mahogany')" class="theme-option-btn flex items-center gap-2 p-2 rounded-lg bg-[#292623] border border-[#3d3934] text-left transition">
+            <span class="w-5 h-5 rounded shrink-0 border border-black/30 overflow-hidden grid grid-cols-2 grid-rows-2">
+              <span class="bg-[#f0d9b5]"></span><span class="bg-[#b58863]"></span>
+              <span class="bg-[#b58863]"></span><span class="bg-[#f0d9b5]"></span>
+            </span>
+            <span class="text-xs font-semibold text-stone-200 truncate">Gỗ Hoàng Gia</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-1.5">Phong cách quân cờ</div>
+        <div class="grid grid-cols-3 gap-2">
+          <button id="piece-btn-neo" onclick="setPieceStyle('neo')" class="piece-option-btn active flex items-center gap-2 p-2 rounded-lg bg-[#292623] border border-[#3d3934] transition">
+            <div id="preview-piece-neo" class="w-6 h-6 shrink-0"></div>
+            <span class="text-xs font-semibold text-stone-200 truncate">Neo</span>
+          </button>
+
+          <button id="piece-btn-classic" onclick="setPieceStyle('classic')" class="piece-option-btn flex items-center gap-2 p-2 rounded-lg bg-[#292623] border border-[#3d3934] transition">
+            <div id="preview-piece-classic" class="w-6 h-6 shrink-0"></div>
+            <span class="text-xs font-semibold text-stone-200 truncate">Cổ Điển</span>
+          </button>
+
+          <button id="piece-btn-minimal" onclick="setPieceStyle('minimal')" class="piece-option-btn flex items-center gap-2 p-2 rounded-lg bg-[#292623] border border-[#3d3934] transition">
+            <div id="preview-piece-minimal" class="w-6 h-6 shrink-0"></div>
+            <span class="text-xs font-semibold text-stone-200 truncate">Tối Giản</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thanh thông tin đối thủ (Phía trên bàn cờ) -->
+    <div class="flex items-center justify-between px-2 py-0.5">
+      <div class="flex items-center gap-2.5">
+        <div id="top-avatar" class="w-8 h-8 rounded-lg bg-[#3c3936] border border-[#524e4a] flex items-center justify-center font-bold text-xs text-stone-200 shadow-inner">
+          AI
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="top-name" class="text-sm font-bold text-stone-100">Máy (Trung bình)</span>
+            <span id="ai-thinking" class="hidden text-xs font-medium text-[#95cc5c] animate-pulse">đang suy nghĩ...</span>
+          </div>
+          <div id="top-captured" class="flex items-center gap-0.5 h-4 mt-0.5"></div>
+        </div>
+      </div>
+      <div id="status-banner" class="text-xs sm:text-sm font-semibold px-3 py-1 rounded-lg bg-[#312e2b] text-amber-200 border border-[#45413c]">
+        Lượt quân Trắng
+      </div>
+    </div>
+  </div>
+
+  <!-- Bàn cờ trung tâm -->
+  <div class="chess-board-wrapper theme-wood" id="board-wrapper">
+    <div class="chess-board" id="chess-board"></div>
+
+    <!-- Modal Phong cấp Tốt -->
+    <div id="promotion-modal" class="promo-modal hidden absolute inset-0 z-30 flex items-center justify-center p-4">
+      <div class="bg-[#262421] border border-[#4a453f] rounded-2xl p-4 shadow-2xl text-center max-w-xs w-full">
+        <p class="text-sm font-bold text-stone-100 mb-3">Chọn quân phong cấp</p>
+        <div id="promotion-options" class="grid grid-cols-4 gap-2.5"></div>
+      </div>
+    </div>
+
+    <!-- Banner thông báo kết thúc ván nổi gọn ở đáy bàn cờ -->
+    <div id="game-over-toast" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 z-20 bg-[#22201d]/95 border border-[#524c44] px-4 py-2 rounded-xl shadow-2xl flex items-center gap-3 whitespace-nowrap">
+      <span id="game-over-text" class="text-xs sm:text-sm font-bold text-white">Chiếu hết!</span>
+      <button onclick="startNewGame()" class="px-2.5 py-1 rounded-lg bg-[#81b64c] hover:bg-[#92c75a] text-white text-xs font-bold transition">
+        Chơi lại
+      </button>
+    </div>
+  </div>
+
+  <!-- Thanh thông tin người chơi (Phía dưới bàn cờ) & Bảng điều khiển -->
+  <div class="w-full max-w-[560px] flex flex-col gap-2.5 mt-2">
+    <div class="flex items-center justify-between px-2 py-0.5">
+      <div class="flex items-center gap-2.5">
+        <div id="bottom-avatar" class="w-8 h-8 rounded-lg bg-[#e8e6e3] border border-[#b5b0a8] flex items-center justify-center font-bold text-xs text-[#262421]">
+          BẠN
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="bottom-name" class="text-sm font-bold text-stone-100">Người chơi (Trắng)</span>
+          </div>
+          <div id="bottom-captured" class="flex items-center gap-0.5 h-4 mt-0.5"></div>
+        </div>
+      </div>
+
+      <!-- Chọn cầm quân Trắng hoặc Đen -->
+      <div class="flex items-center gap-1.5 bg-[#1e1c1a] p-1 rounded-lg border border-[#33302c]">
+        <button id="side-w" onclick="choosePlayerSide('w')" title="Cầm quân Trắng" class="px-2.5 py-1 rounded-md text-xs font-bold bg-[#e8e6e3] text-[#222] transition">
+          Trắng
+        </button>
+        <button id="side-b" onclick="choosePlayerSide('b')" title="Cầm quân Đen" class="px-2.5 py-1 rounded-md text-xs font-bold text-stone-300 hover:text-white transition">
+          Đen
+        </button>
+      </div>
+    </div>
+
+    <!-- Lịch sử nước đi chuẩn đại số gọn nhẹ 1 dòng -->
+    <div class="bg-[#1b1917] px-3 py-1.5 rounded-lg border border-[#2e2b27] flex items-center gap-2">
+      <span class="text-[11px] font-bold uppercase text-stone-500 shrink-0">Nước đi:</span>
+      <div id="move-history-bar" class="pgn-scroll flex items-center gap-2 overflow-x-auto text-xs font-mono text-stone-300 whitespace-nowrap py-0.5">
+        <span class="text-stone-500 italic">Chưa có nước đi</span>
+      </div>
+    </div>
+
+    <!-- Hàng nút chức năng -->
+    <div class="grid grid-cols-4 gap-2 bg-[#1e1c1a] p-2 rounded-xl border border-[#33302c] shadow-md">
+      <button onclick="startNewGame()" class="btn-control py-2.5 px-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5">
+        <svg class="w-4 h-4 text-[#81b64c]" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span>Ván mới</span>
+      </button>
+
+      <button id="btn-undo" onclick="undoMove()" class="btn-control py-2.5 px-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5">
+        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 14L4 9m0 0l5-5M4 9h10.5a5.5 5.5 0 015.5 5.5v0a5.5 5.5 0 01-5.5 5.5H11"/>
+        </svg>
+        <span>Đi lại</span>
+      </button>
+
+      <button onclick="flipBoard()" class="btn-control py-2.5 px-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5">
+        <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+        </svg>
+        <span>Lật bàn</span>
+      </button>
+
+      <button id="btn-sound" onclick="toggleSound()" class="btn-control py-2.5 px-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5">
+        <svg id="sound-icon-on" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+        </svg>
+        <svg id="sound-icon-off" class="hidden w-4 h-4 text-rose-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
+        </svg>
+        <span id="sound-label">Âm thanh</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * =========================================================================
+     * 1. BỘ QUÂN CỜ SVG 3 PHONG CÁCH:
+     *    - 'neo': Bộ quân Neo chuẩn ảnh mẫu (viền đậm, bo góc mềm mại, đổ bóng 3D phẳng)
+     *    - 'classic': Staunton Cổ Điển (đường nét thanh thoát, vương miện & bờm ngựa tinh xảo)
+     *    - 'minimal': Tối Giản (hình khối hiện đại, sắc sảo, tương phản cao)
+     * =========================================================================
+     */
+    let currentBoardTheme = 'wood';
+    let currentPieceStyle = 'neo';
+
+    function getPieceSVG(type, color, styleOverride = null) {
+      const style = styleOverride || currentPieceStyle;
+      if (style === 'classic') return getClassicPieceSVG(type, color);
+      if (style === 'minimal') return getMinimalPieceSVG(type, color);
+      return getNeoPieceSVG(type, color);
+    }
+
+    // PHONG CÁCH 1: NEO (GIỐNG HỆT ẢNH MẪU)
+    function getNeoPieceSVG(type, color) {
+      const isW = color === 'w';
+      const fillMain = isW ? '#f8f8f8' : '#555351';
+      const fillShade = isW ? '#d3d3d3' : '#3c3a38';
+      const strokeColor = '#2e2b28';
+
+      switch (type) {
+        case 'p':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 11.5,38.5 L 33.5,38.5 C 34.8,38.5 35.5,37.6 35.2,36.3 C 34.6,34.2 32.5,33.2 30.8,32.6 C 29.2,29.5 27.6,25.2 26.8,21.5 C 28.4,20.7 29.3,19.4 28.8,18.2 C 28.4,17.3 27.2,16.9 26.0,16.8 C 27.7,15.5 28.7,13.5 28.7,11.3 C 28.7,7.6 25.9,4.7 22.5,4.7 C 19.1,4.7 16.3,7.6 16.3,11.3 C 16.3,13.5 17.3,15.5 19.0,16.8 C 17.8,16.9 16.6,17.3 16.2,18.2 C 15.7,19.4 16.6,20.7 18.2,21.5 C 17.4,25.2 15.8,29.5 14.2,32.6 C 12.5,33.2 10.4,34.2 9.8,36.3 C 9.5,37.6 10.2,38.5 11.5,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M 22.5,5.8 C 25.3,5.8 27.6,8.2 27.6,11.3 C 27.6,13.4 26.6,15.1 25.0,16.2 C 26.3,16.5 27.5,17.0 27.7,18.1 C 28.0,19.1 27.1,20.1 25.6,20.7 C 26.4,24.6 28.0,29.2 29.7,32.6 C 31.4,33.2 33.4,34.2 34.0,36.2 C 34.2,37.0 33.7,37.4 32.8,37.4 L 22.5,37.4 C 26.8,37.4 29.4,36.6 29.2,35.4 C 28.8,33.6 26.8,32.6 25.6,32.0 C 24.4,28.8 23.4,24.6 23.0,20.7 C 24.2,20.1 24.8,19.1 24.5,18.1 C 24.3,17.2 23.5,16.6 22.5,16.3 C 24.0,15.1 24.8,13.4 24.8,11.3 C 24.8,8.5 23.8,6.4 22.5,5.8 Z"
+                    fill="${fillShade}"/>
+              <path d="M 14.3,33.0 L 30.7,33.0" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+        case 'r':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 10.5,38.5 L 34.5,38.5 C 35.6,38.5 36.2,37.7 36.0,36.5 L 35.2,33.5 C 34.9,32.5 34.0,31.9 32.8,31.7 L 31.0,17.5 L 33.4,15.2 C 33.9,14.7 34.2,14.0 34.2,13.2 L 34.2,8.2 C 34.2,7.3 33.5,6.7 32.6,6.7 L 29.6,6.7 C 28.8,6.7 28.2,7.3 28.2,8.1 L 28.2,10.2 L 25.2,10.2 L 25.2,8.1 C 25.2,7.3 24.6,6.7 23.8,6.7 L 21.2,6.7 C 20.4,6.7 19.8,7.3 19.8,8.1 L 19.8,10.2 L 16.8,10.2 L 16.8,8.1 C 16.8,7.3 16.2,6.7 15.4,6.7 L 12.4,6.7 C 11.5,6.7 10.8,7.3 10.8,8.2 L 10.8,13.2 C 10.8,14.0 11.1,14.7 11.6,15.2 L 14.0,17.5 L 12.2,31.7 C 11.0,31.9 10.1,32.5 9.8,33.5 L 9.0,36.5 C 8.8,37.7 9.4,38.5 10.5,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M 29.5,7.8 L 32.6,7.8 C 32.9,7.8 33.1,8.0 33.1,8.3 L 33.1,13.1 C 33.1,13.6 32.9,14.0 32.5,14.4 L 29.9,17.0 L 31.7,31.7 C 32.9,31.9 33.8,32.5 34.1,33.5 L 34.8,36.4 C 35.0,37.1 34.6,37.4 33.9,37.4 L 27.5,37.4 C 28.4,37.4 28.8,37.0 28.6,36.2 L 28.0,33.5 C 27.7,32.6 27.0,32.0 26.0,31.8 L 25.0,17.0 L 27.4,14.5 C 27.8,14.1 28.0,13.6 28.0,13.1 L 28.0,11.2 L 29.5,11.2 Z"
+                    fill="${fillShade}"/>
+              <path d="M 14.2,17.5 L 30.8,17.5 M 12.3,31.8 L 32.7,31.8" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+        case 'n':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 11.2,38.5 L 34.2,38.5 C 35.4,38.5 36.1,37.6 35.8,36.3 C 35.3,34.1 33.8,32.8 32.2,32.1 C 33.8,26.8 34.6,19.4 31.8,13.4 C 29.8,9.1 25.9,7.0 21.8,6.7 L 19.6,4.6 C 18.9,4.0 17.8,4.4 17.7,5.3 L 17.4,7.6 C 15.1,8.8 13.3,10.9 11.9,13.6 C 10.3,16.7 8.9,19.4 8.8,21.5 C 8.7,23.2 10.0,24.6 11.8,24.7 C 13.7,24.8 16.0,23.6 18.2,21.9 C 19.3,21.0 20.4,20.2 21.2,19.7 C 21.2,22.4 18.8,24.8 15.8,27.3 C 13.4,29.3 12.2,31.0 11.8,32.5 C 10.5,33.3 9.7,34.5 9.5,36.3 C 9.3,37.6 10.0,38.5 11.2,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M 22.4,7.8 C 26.0,8.2 29.1,10.2 30.8,13.9 C 33.4,19.5 32.6,26.6 31.1,32.0 C 32.6,32.7 34.1,33.9 34.6,36.1 C 34.8,36.9 34.3,37.4 33.4,37.4 L 27.6,37.4 C 28.6,37.4 29.1,36.9 28.9,36.0 C 28.5,34.1 27.2,32.9 25.9,32.2 C 27.6,26.8 28.6,19.5 26.2,13.8 C 24.8,10.5 23.3,8.8 22.4,7.8 Z"
+                    fill="${fillShade}"/>
+              <path d="M 11.9,32.6 L 32.2,32.6" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+              <circle cx="15.3" cy="13.5" r="1.45" fill="${strokeColor}"/>
+              <path d="M 11.4,20.6 C 11.8,20.1 12.4,19.9 12.9,20.1" stroke="${strokeColor}" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+            </svg>`;
+        case 'b':
+          return `
+            <svg viewBox="0 0 45 45">
+              <circle cx="22.5" cy="5.5" r="2.3" fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.1"/>
+              <path d="M 11.2,38.5 L 33.8,38.5 C 35.0,38.5 35.7,37.6 35.4,36.3 C 34.9,34.2 33.1,33.1 31.4,32.4 C 30.8,31.2 30.5,30.1 30.4,29.1 C 32.6,26.7 33.7,23.5 33.2,19.9 C 32.6,15.6 29.2,11.1 22.5,7.9 C 15.8,11.1 12.4,15.6 11.8,19.9 C 11.3,23.5 12.4,26.7 14.6,29.1 C 14.5,30.1 14.2,31.2 13.6,32.4 C 11.9,33.1 10.1,34.2 9.6,36.3 C 9.3,37.6 10.0,38.5 11.2,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M 22.5,9.1 C 28.3,12.1 31.4,16.2 32.0,20.1 C 32.5,23.4 31.4,26.3 29.3,28.6 C 29.4,29.8 29.7,31.0 30.3,32.3 C 31.9,33.0 33.7,34.1 34.2,36.2 C 34.4,37.0 33.9,37.4 33.0,37.4 L 26.8,37.4 C 27.8,37.4 28.3,36.9 28.1,36.1 C 27.7,34.2 26.2,33.1 24.9,32.4 C 24.4,31.1 24.2,29.8 24.2,28.6 C 26.0,26.3 27.0,23.4 26.6,20.1 C 26.1,16.3 24.4,12.2 22.5,9.1 Z"
+                    fill="${fillShade}"/>
+              <path d="M 19.6,14.6 L 23.4,19.4" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M 14.8,29.2 L 30.2,29.2 M 13.6,32.6 L 31.4,32.6" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+        case 'q':
+          return `
+            <svg viewBox="0 0 45 45">
+              <circle cx="8.2" cy="12.2" r="2.3" fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.0"/>
+              <circle cx="22.5" cy="7.6" r="2.4" fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.0"/>
+              <circle cx="36.8" cy="12.2" r="2.3" fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.0"/>
+              <path d="M 11.4,38.5 L 33.6,38.5 C 34.8,38.5 35.5,37.6 35.2,36.3 C 34.7,34.3 33.2,33.2 31.7,32.5 L 35.8,14.8 C 36.0,14.0 35.1,13.5 34.5,14.0 L 27.6,20.4 L 23.4,10.4 C 23.1,9.7 21.9,9.7 21.6,10.4 L 17.4,20.4 L 10.5,14.0 C 9.9,13.5 9.0,14.0 9.2,14.8 L 13.3,32.5 C 11.8,33.2 10.3,34.3 9.8,36.3 C 9.5,37.6 10.2,38.5 11.4,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M 34.5,15.6 L 30.6,32.4 C 32.0,33.1 33.5,34.2 34.0,36.1 C 34.2,36.9 33.7,37.4 32.8,37.4 L 26.8,37.4 C 27.8,37.4 28.3,36.9 28.1,36.0 C 27.7,34.3 26.5,33.2 25.4,32.5 L 28.5,21.0 Z"
+                    fill="${fillShade}"/>
+              <path d="M 13.4,32.6 L 31.6,32.6" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+        case 'k':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 22.5,4.2 L 22.5,11.6 M 18.8,7.6 L 26.2,7.6" stroke="${strokeColor}" stroke-width="3.0" stroke-linecap="round"/>
+              <path d="M 11.4,38.5 L 33.6,38.5 C 34.8,38.5 35.5,37.6 35.2,36.3 C 34.7,34.3 33.2,33.2 31.7,32.5 C 34.2,28.8 36.2,24.2 36.2,19.8 C 36.2,15.2 32.9,12.2 28.6,12.2 C 25.7,12.2 23.6,13.7 22.5,15.6 C 21.4,13.7 19.3,12.2 16.4,12.2 C 12.1,12.2 8.8,15.2 8.8,19.8 C 8.8,24.2 10.8,28.8 13.3,32.5 C 11.8,33.2 10.3,34.3 9.8,36.3 C 9.5,37.6 10.2,38.5 11.4,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M 28.6,13.3 C 32.2,13.3 35.0,15.9 35.0,19.8 C 35.0,23.9 33.1,28.3 30.6,32.2 C 32.1,32.9 33.6,34.1 34.0,36.1 C 34.2,36.9 33.7,37.4 32.8,37.4 L 26.6,37.4 C 27.6,37.4 28.1,36.9 27.9,36.0 C 27.5,34.2 26.2,33.1 24.9,32.3 C 27.2,28.4 29.0,23.9 29.0,19.8 C 29.0,16.4 27.5,14.2 26.1,13.4 C 26.9,13.3 27.7,13.3 28.6,13.3 Z"
+                    fill="${fillShade}"/>
+              <path d="M 13.4,32.6 L 31.6,32.6" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+      }
+      return '';
+    }
+
+    // PHONG CÁCH 2: STAUNTON CỔ ĐIỂN (ĐƯỜNG NÉT THANH THOÁT, CHI TIẾT TINH XẢO)
+    function getClassicPieceSVG(type, color) {
+      const isW = color === 'w';
+      const fill = isW ? '#fffdf7' : '#2a2826';
+      const stroke = isW ? '#24211e' : '#181614';
+      const innerLine = isW ? '#24211e' : '#e5dfd5';
+
+      switch (type) {
+        case 'p':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 22.5,9 C 20.29,9 18.5,10.79 18.5,13 C 18.5,13.89 18.79,14.71 19.28,15.38 C 17.33,16.5 16,18.59 16,21 C 16,23.03 16.94,24.84 18.41,26.03 C 15.41,27.09 11,31.58 11,39.5 L 34,39.5 C 34,31.58 29.59,27.09 26.59,26.03 C 28.06,24.84 29,23.03 29,21 C 29,18.59 27.67,16.5 25.72,15.38 C 26.21,14.71 26.5,13.89 26.5,13 C 26.5,10.79 24.71,9 22.5,9 z"
+                    fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M 12.5,36.5 L 32.5,36.5 M 16.5,29.5 L 28.5,29.5" stroke="${innerLine}" stroke-width="1.2" stroke-linecap="round" opacity="0.65"/>
+            </svg>`;
+        case 'r':
+          return `
+            <svg viewBox="0 0 45 45">
+              <g fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z"/>
+                <path d="M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z"/>
+                <path d="M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14"/>
+                <path d="M 34,14 L 31,17 L 14,17 L 11,14"/>
+                <path d="M 31,17 L 31,29.5 L 14,29.5 L 14,17"/>
+                <path d="M 31,29.5 L 32.5,32 L 12.5,32 L 14,29.5"/>
+              </g>
+              <path d="M 14,17 L 31,17 M 14,29.5 L 31,29.5 M 12,32 L 33,32" stroke="${innerLine}" stroke-width="1.15" stroke-linecap="round"/>
+            </svg>`;
+        case 'n':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18"
+                    fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10"
+                    fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="14.5" cy="15.5" r="1.1" fill="${innerLine}"/>
+              <path d="M 24.5,11.5 C 31.5,13 35.5,20 35,36.5" fill="none" stroke="${innerLine}" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>`;
+        case 'b':
+          return `
+            <svg viewBox="0 0 45 45">
+              <g fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.646,38.99 6.677,38.97 6,38 C 7.354,36.06 9,36 9,36 z"/>
+                <path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/>
+                <circle cx="22.5" cy="8" r="2.2"/>
+              </g>
+              <path d="M 17.5,26 L 27.5,26 M 15,30 L 30,30 M 22.5,15.5 L 22.5,20.5 M 20,18 L 25,18" stroke="${innerLine}" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>`;
+        case 'q':
+          return `
+            <svg viewBox="0 0 45 45">
+              <g fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="6" cy="12" r="2.1"/>
+                <circle cx="14" cy="9" r="2.1"/>
+                <circle cx="22.5" cy="8" r="2.1"/>
+                <circle cx="31" cy="9" r="2.1"/>
+                <circle cx="39" cy="12" r="2.1"/>
+                <path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z"/>
+                <path d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 10.5,36 10.5,36 C 9,37.5 11,38.5 11,38.5 C 17.5,39.5 27.5,39.5 34,38.5 C 34,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"/>
+              </g>
+              <path d="M 11.5,30 C 15,29 30,29 33.5,30 M 12,33.5 C 18,32.5 27,32.5 33,33.5" fill="none" stroke="${innerLine}" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>`;
+        case 'k':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 22.5,11.63 L 22.5,6 M 20,8 L 25,8" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/>
+              <g fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M 22.5,25 C 22.5,25 27,17.5 25.5,14.5 C 25.5,14.5 24.5,12 22.5,12 C 20.5,12 19.5,14.5 19.5,14.5 C 18,17.5 22.5,25 22.5,25"/>
+                <path d="M 11.5,37 C 17,40.5 27,40.5 32.5,37 L 32.5,30 C 32.5,30 41.5,25.5 38.5,19.5 C 34.5,13 25,16 22.5,23.5 L 22.5,27 L 22.5,23.5 C 19,16 9.5,13 6.5,19.5 C 3.5,25.5 11.5,29.5 11.5,29.5 L 11.5,37 z"/>
+              </g>
+              <path d="M 11.5,30 C 17,27 27,27 32.5,30 M 11.5,33.5 C 17,30.5 27,30.5 32.5,33.5 M 11.5,37 C 17,34 27,34 32.5,37" fill="none" stroke="${innerLine}" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>`;
+      }
+      return '';
+    }
+
+    // PHONG CÁCH 3: TỐI GIẢN HIỆN ĐẠI (MINIMALIST GEOMETRIC)
+    function getMinimalPieceSVG(type, color) {
+      const isW = color === 'w';
+      const fill = isW ? '#ffffff' : '#252321';
+      const accent = isW ? '#d4d0c8' : '#4a4744';
+      const stroke = isW ? '#383430' : '#121110';
+
+      switch (type) {
+        case 'p':
+          return `
+            <svg viewBox="0 0 45 45">
+              <circle cx="22.5" cy="13.5" r="5.5" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+              <path d="M 13,38 L 32,38 L 28,21 L 17,21 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
+              <rect x="11" y="35" width="23" height="3.5" rx="1.7" fill="${accent}" stroke="${stroke}" stroke-width="1.3"/>
+            </svg>`;
+        case 'r':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 12,8 L 16.5,8 L 16.5,11.5 L 20.2,11.5 L 20.2,8 L 24.8,8 L 24.8,11.5 L 28.5,11.5 L 28.5,8 L 33,8 L 33,15.5 L 30,18 L 31,34.5 L 14,34.5 L 15,18 L 12,15.5 Z"
+                    fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
+              <rect x="10.5" y="34.5" width="24" height="4" rx="2" fill="${accent}" stroke="${stroke}" stroke-width="1.4"/>
+            </svg>`;
+        case 'n':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 13,35 L 32,35 L 30.5,14 L 22,7 L 19,10.5 L 11,18.5 L 13.5,23.5 L 20.5,20.5 L 17.5,28.5 Z"
+                    fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
+              <rect x="10.5" y="34.5" width="24" height="4" rx="2" fill="${accent}" stroke="${stroke}" stroke-width="1.4"/>
+            </svg>`;
+        case 'b':
+          return `
+            <svg viewBox="0 0 45 45">
+              <circle cx="22.5" cy="6.5" r="2.3" fill="${accent}" stroke="${stroke}" stroke-width="1.4"/>
+              <path d="M 22.5,9.5 C 15.5,15.5 14,24.5 16,34.5 L 29,34.5 C 31,24.5 29.5,15.5 22.5,9.5 Z"
+                    fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
+              <line x1="22.5" y1="15" x2="22.5" y2="23" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="19" y1="18.5" x2="26" y2="18.5" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/>
+              <rect x="10.5" y="34.5" width="24" height="4" rx="2" fill="${accent}" stroke="${stroke}" stroke-width="1.4"/>
+            </svg>`;
+        case 'q':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 9,13 L 15.5,23.5 L 22.5,10 L 29.5,23.5 L 36,13 L 32.5,34.5 L 12.5,34.5 Z"
+                    fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
+              <circle cx="9" cy="11.5" r="2" fill="${accent}" stroke="${stroke}" stroke-width="1.3"/>
+              <circle cx="22.5" cy="8.2" r="2.2" fill="${accent}" stroke="${stroke}" stroke-width="1.3"/>
+              <circle cx="36" cy="11.5" r="2" fill="${accent}" stroke="${stroke}" stroke-width="1.3"/>
+              <rect x="10.5" y="34.5" width="24" height="4" rx="2" fill="${accent}" stroke="${stroke}" stroke-width="1.4"/>
+            </svg>`;
+        case 'k':
+          return `
+            <svg viewBox="0 0 45 45">
+              <path d="M 22.5,4.5 L 22.5,12.5 M 18.5,8.5 L 26.5,8.5" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round"/>
+              <path d="M 12,17.5 C 12,13.5 18.5,13.5 22.5,18.5 C 26.5,13.5 33,13.5 33,17.5 L 30.5,34.5 L 14.5,34.5 Z"
+                    fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>
+              <rect x="10.5" y="34.5" width="24" height="4" rx="2" fill="${accent}" stroke="${stroke}" stroke-width="1.4"/>
+            </svg>`;
+      }
+      return '';
+    }
+
+    /**
+     * =========================================================================
+     * 2. ÂM THANH CỜ VUA TỔNG HỢP QUA WEB AUDIO API
+     * =========================================================================
+     */
+    function getPieceSVG(type, color) {
+      const isW = color === 'w';
+      const fillMain = isW ? '#f8f8f8' : '#555351';
+      const fillShade = isW ? '#d3d3d3' : '#3c3a38';
+      const strokeColor = '#2e2b28';
+
+      switch (type) {
+        case 'p': // TỐT (PAWN)
+          return `
+            <svg viewBox="0 0 45 45">
+              <!-- Thân & Đế -->
+              <path d="M 11.5,38.5 L 33.5,38.5 C 34.8,38.5 35.5,37.6 35.2,36.3 C 34.6,34.2 32.5,33.2 30.8,32.6 C 29.2,29.5 27.6,25.2 26.8,21.5 C 28.4,20.7 29.3,19.4 28.8,18.2 C 28.4,17.3 27.2,16.9 26.0,16.8 C 27.7,15.5 28.7,13.5 28.7,11.3 C 28.7,7.6 25.9,4.7 22.5,4.7 C 19.1,4.7 16.3,7.6 16.3,11.3 C 16.3,13.5 17.3,15.5 19.0,16.8 C 17.8,16.9 16.6,17.3 16.2,18.2 C 15.7,19.4 16.6,20.7 18.2,21.5 C 17.4,25.2 15.8,29.5 14.2,32.6 C 12.5,33.2 10.4,34.2 9.8,36.3 C 9.5,37.6 10.2,38.5 11.5,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Đổ bóng khối bên phải tạo chiều sâu 3D phẳng Neo -->
+              <path d="M 22.5,5.8 C 25.3,5.8 27.6,8.2 27.6,11.3 C 27.6,13.4 26.6,15.1 25.0,16.2 C 26.3,16.5 27.5,17.0 27.7,18.1 C 28.0,19.1 27.1,20.1 25.6,20.7 C 26.4,24.6 28.0,29.2 29.7,32.6 C 31.4,33.2 33.4,34.2 34.0,36.2 C 34.2,37.0 33.7,37.4 32.8,37.4 L 22.5,37.4 C 26.8,37.4 29.4,36.6 29.2,35.4 C 28.8,33.6 26.8,32.6 25.6,32.0 C 24.4,28.8 23.4,24.6 23.0,20.7 C 24.2,20.1 24.8,19.1 24.5,18.1 C 24.3,17.2 23.5,16.6 22.5,16.3 C 24.0,15.1 24.8,13.4 24.8,11.3 C 24.8,8.5 23.8,6.4 22.5,5.8 Z"
+                    fill="${fillShade}"/>
+              <!-- Đường gân đế -->
+              <path d="M 14.3,33.0 L 30.7,33.0" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+
+        case 'r': // XE (ROOK)
+          return `
+            <svg viewBox="0 0 45 45">
+              <!-- Hình khối chính -->
+              <path d="M 10.5,38.5 L 34.5,38.5 C 35.6,38.5 36.2,37.7 36.0,36.5 L 35.2,33.5 C 34.9,32.5 34.0,31.9 32.8,31.7 L 31.0,17.5 L 33.4,15.2 C 33.9,14.7 34.2,14.0 34.2,13.2 L 34.2,8.2 C 34.2,7.3 33.5,6.7 32.6,6.7 L 29.6,6.7 C 28.8,6.7 28.2,7.3 28.2,8.1 L 28.2,10.2 L 25.2,10.2 L 25.2,8.1 C 25.2,7.3 24.6,6.7 23.8,6.7 L 21.2,6.7 C 20.4,6.7 19.8,7.3 19.8,8.1 L 19.8,10.2 L 16.8,10.2 L 16.8,8.1 C 16.8,7.3 16.2,6.7 15.4,6.7 L 12.4,6.7 C 11.5,6.7 10.8,7.3 10.8,8.2 L 10.8,13.2 C 10.8,14.0 11.1,14.7 11.6,15.2 L 14.0,17.5 L 12.2,31.7 C 11.0,31.9 10.1,32.5 9.8,33.5 L 9.0,36.5 C 8.8,37.7 9.4,38.5 10.5,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Đổ bóng phải -->
+              <path d="M 29.5,7.8 L 32.6,7.8 C 32.9,7.8 33.1,8.0 33.1,8.3 L 33.1,13.1 C 33.1,13.6 32.9,14.0 32.5,14.4 L 29.9,17.0 L 31.7,31.7 C 32.9,31.9 33.8,32.5 34.1,33.5 L 34.8,36.4 C 35.0,37.1 34.6,37.4 33.9,37.4 L 27.5,37.4 C 28.4,37.4 28.8,37.0 28.6,36.2 L 28.0,33.5 C 27.7,32.6 27.0,32.0 26.0,31.8 L 25.0,17.0 L 27.4,14.5 C 27.8,14.1 28.0,13.6 28.0,13.1 L 28.0,11.2 L 29.5,11.2 Z"
+                    fill="${fillShade}"/>
+              <!-- Các đường gân cổ & đế -->
+              <path d="M 14.2,17.5 L 30.8,17.5 M 12.3,31.8 L 32.7,31.8" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+
+        case 'n': // MÃ (KNIGHT)
+          return `
+            <svg viewBox="0 0 45 45">
+              <!-- Hình khối đầu ngựa mượt mà kiểu Neo -->
+              <path d="M 11.2,38.5 L 34.2,38.5 C 35.4,38.5 36.1,37.6 35.8,36.3 C 35.3,34.1 33.8,32.8 32.2,32.1 C 33.8,26.8 34.6,19.4 31.8,13.4 C 29.8,9.1 25.9,7.0 21.8,6.7 L 19.6,4.6 C 18.9,4.0 17.8,4.4 17.7,5.3 L 17.4,7.6 C 15.1,8.8 13.3,10.9 11.9,13.6 C 10.3,16.7 8.9,19.4 8.8,21.5 C 8.7,23.2 10.0,24.6 11.8,24.7 C 13.7,24.8 16.0,23.6 18.2,21.9 C 19.3,21.0 20.4,20.2 21.2,19.7 C 21.2,22.4 18.8,24.8 15.8,27.3 C 13.4,29.3 12.2,31.0 11.8,32.5 C 10.5,33.3 9.7,34.5 9.5,36.3 C 9.3,37.6 10.0,38.5 11.2,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Đổ bóng bờm sau và đế phải -->
+              <path d="M 22.4,7.8 C 26.0,8.2 29.1,10.2 30.8,13.9 C 33.4,19.5 32.6,26.6 31.1,32.0 C 32.6,32.7 34.1,33.9 34.6,36.1 C 34.8,36.9 34.3,37.4 33.4,37.4 L 27.6,37.4 C 28.6,37.4 29.1,36.9 28.9,36.0 C 28.5,34.1 27.2,32.9 25.9,32.2 C 27.6,26.8 28.6,19.5 26.2,13.8 C 24.8,10.5 23.3,8.8 22.4,7.8 Z"
+                    fill="${fillShade}"/>
+              <!-- Đường gân đế & Mắt & Mũi -->
+              <path d="M 11.9,32.6 L 32.2,32.6" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+              <circle cx="15.3" cy="13.5" r="1.45" fill="${strokeColor}"/>
+              <path d="M 11.4,20.6 C 11.8,20.1 12.4,19.9 12.9,20.1" stroke="${strokeColor}" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+            </svg>`;
+
+        case 'b': // TƯỢNG (BISHOP)
+          return `
+            <svg viewBox="0 0 45 45">
+              <!-- Đỉnh tròn trên mũ -->
+              <circle cx="22.5" cy="5.5" r="2.3" fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.1"/>
+              <!-- Thân mũ tượng & Đế -->
+              <path d="M 11.2,38.5 L 33.8,38.5 C 35.0,38.5 35.7,37.6 35.4,36.3 C 34.9,34.2 33.1,33.1 31.4,32.4 C 30.8,31.2 30.5,30.1 30.4,29.1 C 32.6,26.7 33.7,23.5 33.2,19.9 C 32.6,15.6 29.2,11.1 22.5,7.9 C 15.8,11.1 12.4,15.6 11.8,19.9 C 11.3,23.5 12.4,26.7 14.6,29.1 C 14.5,30.1 14.2,31.2 13.6,32.4 C 11.9,33.1 10.1,34.2 9.6,36.3 C 9.3,37.6 10.0,38.5 11.2,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Đổ bóng khối bên phải -->
+              <path d="M 22.5,9.1 C 28.3,12.1 31.4,16.2 32.0,20.1 C 32.5,23.4 31.4,26.3 29.3,28.6 C 29.4,29.8 29.7,31.0 30.3,32.3 C 31.9,33.0 33.7,34.1 34.2,36.2 C 34.4,37.0 33.9,37.4 33.0,37.4 L 26.8,37.4 C 27.8,37.4 28.3,36.9 28.1,36.1 C 27.7,34.2 26.2,33.1 24.9,32.4 C 24.4,31.1 24.2,29.8 24.2,28.6 C 26.0,26.3 27.0,23.4 26.6,20.1 C 26.1,16.3 24.4,12.2 22.5,9.1 Z"
+                    fill="${fillShade}"/>
+              <!-- Rãnh chéo đặc trưng trên mũ tượng Neo & Đường gân đế -->
+              <path d="M 19.6,14.6 L 23.4,19.4" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M 14.8,29.2 L 30.2,29.2 M 13.6,32.6 L 31.4,32.6" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+
+        case 'q': // HẬU (QUEEN)
+          return `
+            <svg viewBox="0 0 45 45">
+              <!-- 3 viên ngọc đỉnh vương miện -->
+              <circle cx="8.2" cy="12.2" r="2.3" fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.0"/>
+              <circle cx="22.5" cy="7.6" r="2.4" fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.0"/>
+              <circle cx="36.8" cy="12.2" r="2.3" fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.0"/>
+              <!-- Thân vương miện 3 đỉnh & Đế -->
+              <path d="M 11.4,38.5 L 33.6,38.5 C 34.8,38.5 35.5,37.6 35.2,36.3 C 34.7,34.3 33.2,33.2 31.7,32.5 L 35.8,14.8 C 36.0,14.0 35.1,13.5 34.5,14.0 L 27.6,20.4 L 23.4,10.4 C 23.1,9.7 21.9,9.7 21.6,10.4 L 17.4,20.4 L 10.5,14.0 C 9.9,13.5 9.0,14.0 9.2,14.8 L 13.3,32.5 C 11.8,33.2 10.3,34.3 9.8,36.3 C 9.5,37.6 10.2,38.5 11.4,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Đổ bóng khối bên phải -->
+              <path d="M 34.5,15.6 L 30.6,32.4 C 32.0,33.1 33.5,34.2 34.0,36.1 C 34.2,36.9 33.7,37.4 32.8,37.4 L 26.8,37.4 C 27.8,37.4 28.3,36.9 28.1,36.0 C 27.7,34.3 26.5,33.2 25.4,32.5 L 28.5,21.0 Z"
+                    fill="${fillShade}"/>
+              <!-- Đường gân đế -->
+              <path d="M 13.4,32.6 L 31.6,32.6" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+
+        case 'k': // VUA (KING)
+          return `
+            <svg viewBox="0 0 45 45">
+              <!-- Thánh giá dày bo tròn trên đỉnh -->
+              <path d="M 22.5,4.2 L 22.5,11.6 M 18.8,7.6 L 26.2,7.6" stroke="${strokeColor}" stroke-width="3.0" stroke-linecap="round"/>
+              <!-- Thân vua 2 cánh vòm đối xứng kiểu Neo -->
+              <path d="M 11.4,38.5 L 33.6,38.5 C 34.8,38.5 35.5,37.6 35.2,36.3 C 34.7,34.3 33.2,33.2 31.7,32.5 C 34.2,28.8 36.2,24.2 36.2,19.8 C 36.2,15.2 32.9,12.2 28.6,12.2 C 25.7,12.2 23.6,13.7 22.5,15.6 C 21.4,13.7 19.3,12.2 16.4,12.2 C 12.1,12.2 8.8,15.2 8.8,19.8 C 8.8,24.2 10.8,28.8 13.3,32.5 C 11.8,33.2 10.3,34.3 9.8,36.3 C 9.5,37.6 10.2,38.5 11.4,38.5 Z"
+                    fill="${fillMain}" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Đổ bóng khối bên phải -->
+              <path d="M 28.6,13.3 C 32.2,13.3 35.0,15.9 35.0,19.8 C 35.0,23.9 33.1,28.3 30.6,32.2 C 32.1,32.9 33.6,34.1 34.0,36.1 C 34.2,36.9 33.7,37.4 32.8,37.4 L 26.6,37.4 C 27.6,37.4 28.1,36.9 27.9,36.0 C 27.5,34.2 26.2,33.1 24.9,32.3 C 27.2,28.4 29.0,23.9 29.0,19.8 C 29.0,16.4 27.5,14.2 26.1,13.4 C 26.9,13.3 27.7,13.3 28.6,13.3 Z"
+                    fill="${fillShade}"/>
+              <!-- Đường gân đế -->
+              <path d="M 13.4,32.6 L 31.6,32.6" stroke="${strokeColor}" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>`;
+      }
+      return '';
+    }
+
+    /**
+     * =========================================================================
+     * 2. ÂM THANH CỜ VUA TỔNG HỢP QUA WEB AUDIO API (KHÔNG CẦN FILE NGOÀI)
+     * =========================================================================
+     */
+    const SoundFX = (() => {
+      let ctx = null;
+      let enabled = true;
+
+      function ensureContext() {
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) ctx = new AudioCtx();
+        }
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume();
+        }
+      }
+
+      function playMove(isCapture = false, isCheck = false, isCastle = false) {
+        if (!enabled) return;
+        try {
+          ensureContext();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+
+          // Tiếng gõ quân gỗ trầm ấm
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = isCapture ? 'triangle' : 'sine';
+          osc.frequency.setValueAtTime(isCapture ? 210 : 165, now);
+          osc.frequency.exponentialRampToValueAtTime(58, now + 0.085);
+
+          gain.gain.setValueAtTime(isCapture ? 0.35 : 0.28, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.095);
+
+          // Nếu ăn quân hoặc nhập thành thêm nhịp gõ thứ 2
+          if (isCapture || isCastle) {
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(290, now + 0.045);
+            osc2.frequency.exponentialRampToValueAtTime(90, now + 0.12);
+            gain2.gain.setValueAtTime(0.22, now + 0.045);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.125);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.045);
+            osc2.stop(now + 0.13);
+          }
+
+          // Nếu chiếu tướng thêm âm báo sắc nét
+          if (isCheck) {
+            const oscC = ctx.createOscillator();
+            const gainC = ctx.createGain();
+            oscC.type = 'triangle';
+            oscC.frequency.setValueAtTime(540, now + 0.06);
+            oscC.frequency.exponentialRampToValueAtTime(420, now + 0.24);
+            gainC.gain.setValueAtTime(0.2, now + 0.06);
+            gainC.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+            oscC.connect(gainC);
+            gainC.connect(ctx.destination);
+            oscC.start(now + 0.06);
+            oscC.stop(now + 0.26);
+          }
+        } catch (e) {}
+      }
+
+      function playGameOver(playerWon) {
+        if (!enabled) return;
+        try {
+          ensureContext();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const notes = playerWon ? [392, 493.88, 587.33, 783.99] : [392, 349.23, 311.13, 261.63];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+            gain.gain.setValueAtTime(0.18, now + idx * 0.11);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.32);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.11);
+            osc.stop(now + idx * 0.11 + 0.34);
+          });
+        } catch (e) {}
+      }
+
+      return {
+        playMove,
+        playGameOver,
+        toggle() {
+          enabled = !enabled;
+          return enabled;
+        },
+        isEnabled: () => enabled
+      };
+    })();
+
+    /**
+     * =========================================================================
+     * 3. ENGINE LUẬT CỜ VUA QUỐC TẾ ĐẦY ĐỦ (NHẬP THÀNH, EN PASSANT, PHONG CẤP,
+     *    CHIẾU, CHIẾU HẾT, STALEMATE, THIẾU LỰC LƯỢNG, LẶP LẠI 3 LẦN)
+     * =========================================================================
+     */
+    const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+    // Trạng thái bàn cờ: mảng 8x8, mỗi ô là null hoặc { type: 'p'|'r'|'n'|'b'|'q'|'k', color: 'w'|'b' }
+    let board = [];
+    let turn = 'w';
+    let castling = { wK: true, wQ: true, bK: true, bQ: true };
+    let enPassantTarget = null; // { r, c } hoặc null
+    let halfMoveClock = 0;
+    let positionHistory = {};
+    let moveStack = []; // Lưu lịch sử để Đi lại (Undo)
+    let algebraicHistory = []; // Lịch sử nước đi chuẩn đại số (e4, Nf3, O-O...)
+
+    // Trạng thái giao diện
+    let playerColor = 'w';
+    let flipped = false;
+    let difficulty = 2; // 1: Dễ, 2: Trung bình, 3: Khó
+    let selectedSq = null;
+    let legalMovesForSelected = [];
+    let lastMove = null; // { from: {r,c}, to: {r,c} }
+    let gameResult = null; // null | { status: 'checkmate'|'stalemate'|'draw', winner: 'w'|'b'|null, reason: string }
+    let pendingPromotion = null; // { from, to }
+    let isAiThinking = false;
+    let aiTimer = null;
+    let triggerCheckShake = false; // Kích hoạt rung nhẹ Vua khi vừa bị chiếu
+
+    // Trạng thái hệ thống Kéo Thả mượt mà (Pointer Events)
+    let dragState = {
+      active: false,
+      pointerId: null,
+      from: null,
+      startX: 0,
+      startY: 0,
+      hasMoved: false,
+      hoverSq: null
+    };
+
+    function createInitialBoard() {
+      const backRank = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
+      const b = Array.from({ length: 8 }, () => Array(8).fill(null));
+      for (let c = 0; c < 8; c++) {
+        b[0][c] = { type: backRank[c], color: 'b' };
+        b[1][c] = { type: 'p', color: 'b' };
+        b[6][c] = { type: 'p', color: 'w' };
+        b[7][c] = { type: backRank[c], color: 'w' };
+      }
+      return b;
+    }
+
+    function cloneBoard(b) {
+      return b.map(row => row.map(cell => (cell ? { ...cell } : null)));
+    }
+
+    function inBounds(r, c) {
+      return r >= 0 && r < 8 && c >= 0 && c < 8;
+    }
+
+    function getPositionKey(b, currentTurn, castlingRights, ep) {
+      let rows = '';
+      for (let r = 0; r < 8; r++) {
+        let empty = 0;
+        for (let c = 0; c < 8; c++) {
+          const p = b[r][c];
+          if (!p) {
+            empty++;
+          } else {
+            if (empty > 0) { rows += empty; empty = 0; }
+            rows += p.color === 'w' ? p.type.toUpperCase() : p.type;
+          }
+        }
+        if (empty > 0) rows += empty;
+        if (r < 7) rows += '/';
+      }
+      const cStr = (castlingRights.wK ? 'K' : '') + (castlingRights.wQ ? 'Q' : '') +
+                   (castlingRights.bK ? 'k' : '') + (castlingRights.bQ ? 'q' : '') || '-';
+      const epStr = ep ? `${ep.r},${ep.c}` : '-';
+      return `${rows} ${currentTurn} ${cStr} ${epStr}`;
+    }
+
+    function findKing(b, color) {
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const p = b[r][c];
+          if (p && p.type === 'k' && p.color === color) {
+            return { r, c };
+          }
+        }
+      }
+      return null;
+    }
+
+    // Kiểm tra ô (r, c) có bị tấn công bởi phe `attackerColor` không
+    function isSquareAttacked(b, r, c, attackerColor) {
+      // 1. Tốt tấn công
+      const pawnDir = attackerColor === 'w' ? 1 : -1; // Tốt trắng ở hàng lớn hơn tấn công lên hàng nhỏ hơn
+      for (const dc of [-1, 1]) {
+        const pr = r + pawnDir;
+        const pc = c + dc;
+        if (inBounds(pr, pc)) {
+          const p = b[pr][pc];
+          if (p && p.color === attackerColor && p.type === 'p') return true;
+        }
+      }
+
+      // 2. Mã tấn công
+      const knightD = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+      for (const [dr, dc] of knightD) {
+        const nr = r + dr, nc = c + dc;
+        if (inBounds(nr, nc)) {
+          const p = b[nr][nc];
+          if (p && p.color === attackerColor && p.type === 'n') return true;
+        }
+      }
+
+      // 3. Vua tấn công
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const kr = r + dr, kc = c + dc;
+          if (inBounds(kr, kc)) {
+            const p = b[kr][kc];
+            if (p && p.color === attackerColor && p.type === 'k') return true;
+          }
+        }
+      }
+
+      // 4. Xe / Hậu (hàng ngang & cột dọc)
+      const orthoD = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+      for (const [dr, dc] of orthoD) {
+        let nr = r + dr, nc = c + dc;
+        while (inBounds(nr, nc)) {
+          const p = b[nr][nc];
+          if (p) {
+            if (p.color === attackerColor && (p.type === 'r' || p.type === 'q')) return true;
+            break;
+          }
+          nr += dr;
+          nc += dc;
+        }
+      }
+
+      // 5. Tượng / Hậu (đường chéo)
+      const diagD = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+      for (const [dr, dc] of diagD) {
+        let nr = r + dr, nc = c + dc;
+        while (inBounds(nr, nc)) {
+          const p = b[nr][nc];
+          if (p) {
+            if (p.color === attackerColor && (p.type === 'b' || p.type === 'q')) return true;
+            break;
+          }
+          nr += dr;
+          nc += dc;
+        }
+      }
+
+      return false;
+    }
+
+    function isKingInCheck(b, color) {
+      const kPos = findKing(b, color);
+      if (!kPos) return false;
+      const enemy = color === 'w' ? 'b' : 'w';
+      return isSquareAttacked(b, kPos.r, kPos.c, enemy);
+    }
+
+    // Sinh toàn bộ nước đi giả hợp lệ (pseudo-legal) cho một phe
+    function generatePseudoMoves(b, color, castlingRights, ep) {
+      const moves = [];
+      const enemy = color === 'w' ? 'b' : 'w';
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const p = b[r][c];
+          if (!p || p.color !== color) continue;
+
+          if (p.type === 'p') {
+            const dir = color === 'w' ? -1 : 1;
+            const startRow = color === 'w' ? 6 : 1;
+            const promoRow = color === 'w' ? 0 : 7;
+
+            // Tiến 1 ô
+            const r1 = r + dir;
+            if (inBounds(r1, c) && !b[r1][c]) {
+              if (r1 === promoRow) {
+                for (const promo of ['q', 'r', 'b', 'n']) {
+                  moves.push({ from: { r, c }, to: { r: r1, c }, promotion: promo });
+                }
+              } else {
+                moves.push({ from: { r, c }, to: { r: r1, c } });
+                // Tiến 2 ô từ vị trí ban đầu
+                const r2 = r + dir * 2;
+                if (r === startRow && !b[r2][c]) {
+                  moves.push({ from: { r, c }, to: { r: r2, c }, doublePawn: true });
+                }
+              }
+            }
+
+            // Ăn chéo & Bắt tốt qua đường (En Passant)
+            for (const dc of [-1, 1]) {
+              const nc = c + dc;
+              if (!inBounds(r1, nc)) continue;
+              const target = b[r1][nc];
+              if (target && target.color === enemy) {
+                if (r1 === promoRow) {
+                  for (const promo of ['q', 'r', 'b', 'n']) {
+                    moves.push({ from: { r, c }, to: { r: r1, c: nc }, capture: true, promotion: promo });
+                  }
+                } else {
+                  moves.push({ from: { r, c }, to: { r: r1, c: nc }, capture: true });
+                }
+              } else if (ep && ep.r === r1 && ep.c === nc) {
+                moves.push({ from: { r, c }, to: { r: r1, c: nc }, capture: true, enPassant: true });
+              }
+            }
+          } else if (p.type === 'n') {
+            const jumps = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            for (const [dr, dc] of jumps) {
+              const nr = r + dr, nc = c + dc;
+              if (!inBounds(nr, nc)) continue;
+              const target = b[nr][nc];
+              if (!target || target.color === enemy) {
+                moves.push({ from: { r, c }, to: { r: nr, c: nc }, capture: !!target });
+              }
+            }
+          } else if (p.type === 'b' || p.type === 'r' || p.type === 'q') {
+            const dirs = [];
+            if (p.type === 'r' || p.type === 'q') dirs.push([-1, 0], [1, 0], [0, -1], [0, 1]);
+            if (p.type === 'b' || p.type === 'q') dirs.push([-1, -1], [-1, 1], [1, -1], [1, 1]);
+            for (const [dr, dc] of dirs) {
+              let nr = r + dr, nc = c + dc;
+              while (inBounds(nr, nc)) {
+                const target = b[nr][nc];
+                if (!target) {
+                  moves.push({ from: { r, c }, to: { r: nr, c: nc } });
+                } else {
+                  if (target.color === enemy) {
+                    moves.push({ from: { r, c }, to: { r: nr, c: nc }, capture: true });
+                  }
+                  break;
+                }
+                nr += dr;
+                nc += dc;
+              }
+            }
+          } else if (p.type === 'k') {
+            for (let dr = -1; dr <= 1; dr++) {
+              for (let dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                const nr = r + dr, nc = c + dc;
+                if (!inBounds(nr, nc)) continue;
+                const target = b[nr][nc];
+                if (!target || target.color === enemy) {
+                  moves.push({ from: { r, c }, to: { r: nr, c: nc }, capture: !!target });
+                }
+              }
+            }
+
+            // Nhập thành (Castling)
+            const homeRow = color === 'w' ? 7 : 0;
+            if (r === homeRow && c === 4 && !isSquareAttacked(b, homeRow, 4, enemy)) {
+              // Nhập thành gần (King-side)
+              const canKingSide = color === 'w' ? castlingRights.wK : castlingRights.bK;
+              if (canKingSide && !b[homeRow][5] && !b[homeRow][6]) {
+                const rook = b[homeRow][7];
+                if (rook && rook.type === 'r' && rook.color === color &&
+                    !isSquareAttacked(b, homeRow, 5, enemy) &&
+                    !isSquareAttacked(b, homeRow, 6, enemy)) {
+                  moves.push({ from: { r: homeRow, c: 4 }, to: { r: homeRow, c: 6 }, castle: 'K' });
+                }
+              }
+
+              // Nhập thành xa (Queen-side)
+              const canQueenSide = color === 'w' ? castlingRights.wQ : castlingRights.bQ;
+              if (canQueenSide && !b[homeRow][3] && !b[homeRow][2] && !b[homeRow][1]) {
+                const rook = b[homeRow][0];
+                if (rook && rook.type === 'r' && rook.color === color &&
+                    !isSquareAttacked(b, homeRow, 3, enemy) &&
+                    !isSquareAttacked(b, homeRow, 2, enemy)) {
+                  moves.push({ from: { r: homeRow, c: 4 }, to: { r: homeRow, c: 2 }, castle: 'Q' });
+                }
+              }
+            }
+          }
+        }
+      }
+      return moves;
+    }
+
+    // Áp dụng nước đi lên một bản sao trạng thái (dùng cho kiểm tra hợp lệ & AI)
+    function applyMoveToState(state, move) {
+      const nb = cloneBoard(state.board);
+      const nc = { ...state.castling };
+      let nep = null;
+
+      const piece = nb[move.from.r][move.from.c];
+      const capturedPiece = move.enPassant
+        ? nb[move.from.r][move.to.c]
+        : nb[move.to.r][move.to.c];
+
+      nb[move.from.r][move.from.c] = null;
+
+      if (move.enPassant) {
+        nb[move.from.r][move.to.c] = null;
+      }
+
+      if (move.castle) {
+        const row = move.from.r;
+        if (move.castle === 'K') {
+          nb[row][5] = nb[row][7];
+          nb[row][7] = null;
+        } else {
+          nb[row][3] = nb[row][0];
+          nb[row][0] = null;
+        }
+      }
+
+      if (move.promotion) {
+        nb[move.to.r][move.to.c] = { type: move.promotion, color: piece.color };
+      } else {
+        nb[move.to.r][move.to.c] = piece;
+      }
+
+      // Cập nhật quyền nhập thành
+      if (piece.type === 'k') {
+        if (piece.color === 'w') { nc.wK = false; nc.wQ = false; }
+        else { nc.bK = false; nc.bQ = false; }
+      }
+      if (piece.type === 'r') {
+        if (move.from.r === 7 && move.from.c === 0) nc.wQ = false;
+        if (move.from.r === 7 && move.from.c === 7) nc.wK = false;
+        if (move.from.r === 0 && move.from.c === 0) nc.bQ = false;
+        if (move.from.r === 0 && move.from.c === 7) nc.bK = false;
+      }
+      if (capturedPiece && capturedPiece.type === 'r') {
+        if (move.to.r === 7 && move.to.c === 0) nc.wQ = false;
+        if (move.to.r === 7 && move.to.c === 7) nc.wK = false;
+        if (move.to.r === 0 && move.to.c === 0) nc.bQ = false;
+        if (move.to.r === 0 && move.to.c === 7) nc.bK = false;
+      }
+
+      // Cập nhật En Passant
+      if (move.doublePawn) {
+        nep = { r: (move.from.r + move.to.r) / 2, c: move.from.c };
+      }
+
+      return {
+        board: nb,
+        turn: state.turn === 'w' ? 'b' : 'w',
+        castling: nc,
+        enPassant: nep,
+        captured: capturedPiece
+      };
+    }
+
+    // Lọc ra các nước đi hợp lệ tuyệt đối (không để Vua mình bị chiếu)
+    function generateLegalMoves(b, color, castlingRights, ep) {
+      const pseudo = generatePseudoMoves(b, color, castlingRights, ep);
+      const legal = [];
+      for (const m of pseudo) {
+        const next = applyMoveToState({ board: b, turn: color, castling: castlingRights, enPassant: ep }, m);
+        if (!isKingInCheck(next.board, color)) {
+          legal.push(m);
+        }
+      }
+      return legal;
+    }
+
+    // Kiểm tra hòa do thiếu lực lượng (Insufficient Material)
+    function isInsufficientMaterial(b) {
+      const pieces = [];
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if (b[r][c]) pieces.push({ ...b[r][c], r, c });
+        }
+      }
+      if (pieces.length === 2) return true; // Chỉ còn 2 Vua
+      if (pieces.length === 3) {
+        const minor = pieces.find(p => p.type === 'b' || p.type === 'n');
+        if (minor) return true; // Vua + Mã/Tượng vs Vua
+      }
+      if (pieces.length === 4) {
+        const bishops = pieces.filter(p => p.type === 'b');
+        if (bishops.length === 2 && bishops[0].color !== bishops[1].color) {
+          const sameColorSq = ((bishops[0].r + bishops[0].c) % 2) === ((bishops[1].r + bishops[1].c) % 2);
+          if (sameColorSq) return true; // 2 tượng khác phe cùng màu ô
+        }
+      }
+      return false;
+    }
+
+    /**
+     * =========================================================================
+     * 4. TRÍ TUỆ NHÂN TẠO (AI) 3 MỨC ĐỘ: DỄ, TRUNG BÌNH, KHÓ
+     * =========================================================================
+     */
+    const PIECE_VALUES = { p: 100, n: 320, b: 335, r: 500, q: 920, k: 20000 };
+
+    // Bảng điểm vị trí quân (Piece-Square Tables - góc nhìn quân Trắng, tự động đảo cho Đen)
+    const PST = {
+      p: [
+        [ 0,  0,  0,  0,  0,  0,  0,  0],
+        [50, 50, 50, 50, 50, 50, 50, 50],
+        [10, 10, 20, 32, 32, 20, 10, 10],
+        [ 5,  5, 10, 27, 27, 10,  5,  5],
+        [ 0,  0,  0, 24, 24,  0,  0,  0],
+        [ 5, -5,-10,  0,  0,-10, -5,  5],
+        [ 5, 10, 10,-22,-22, 10, 10,  5],
+        [ 0,  0,  0,  0,  0,  0,  0,  0]
+      ],
+      n: [
+        [-50,-40,-30,-30,-30,-30,-40,-50],
+        [-40,-20,  0,  0,  0,  0,-20,-40],
+        [-30,  0, 12, 16, 16, 12,  0,-30],
+        [-30,  5, 16, 22, 22, 16,  5,-30],
+        [-30,  0, 16, 22, 22, 16,  0,-30],
+        [-30,  5, 12, 16, 16, 12,  5,-30],
+        [-40,-20,  0,  5,  5,  0,-20,-40],
+        [-50,-40,-30,-30,-30,-30,-40,-50]
+      ],
+      b: [
+        [-20,-10,-10,-10,-10,-10,-10,-20],
+        [-10,  0,  0,  0,  0,  0,  0,-10],
+        [-10,  0,  8, 12, 12,  8,  0,-10],
+        [-10,  6,  6, 12, 12,  6,  6,-10],
+        [-10,  0, 12, 12, 12, 12,  0,-10],
+        [-10, 10, 10, 10, 10, 10, 10,-10],
+        [-10,  6,  0,  0,  0,  0,  6,-10],
+        [-20,-10,-10,-10,-10,-10,-10,-20]
+      ],
+      r: [
+        [  0,  0,  0,  0,  0,  0,  0,  0],
+        [  6, 12, 12, 12, 12, 12, 12,  6],
+        [ -5,  0,  0,  0,  0,  0,  0, -5],
+        [ -5,  0,  0,  0,  0,  0,  0, -5],
+        [ -5,  0,  0,  0,  0,  0,  0, -5],
+        [ -5,  0,  0,  0,  0,  0,  0, -5],
+        [ -5,  0,  0,  0,  0,  0,  0, -5],
+        [  0,  0,  0,  6,  6,  0,  0,  0]
+      ],
+      q: [
+        [-20,-10,-10, -5, -5,-10,-10,-20],
+        [-10,  0,  0,  0,  0,  0,  0,-10],
+        [-10,  0,  6,  6,  6,  6,  0,-10],
+        [ -5,  0,  6,  6,  6,  6,  0, -5],
+        [  0,  0,  6,  6,  6,  6,  0, -5],
+        [-10,  6,  6,  6,  6,  6,  0,-10],
+        [-10,  0,  6,  0,  0,  0,  0,-10],
+        [-20,-10,-10, -5, -5,-10,-10,-20]
+      ],
+      k: [
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-20,-30,-30,-40,-40,-30,-30,-20],
+        [-10,-20,-20,-20,-20,-20,-20,-10],
+        [ 20, 20,  0,  0,  0,  0, 20, 20],
+        [ 20, 32, 12,  0,  0, 12, 32, 20]
+      ]
+    };
+
+    function evaluateBoard(b) {
+      let score = 0;
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const p = b[r][c];
+          if (!p) continue;
+          const val = PIECE_VALUES[p.type];
+          const pstRow = p.color === 'w' ? r : 7 - r;
+          const posBonus = PST[p.type][pstRow][c];
+          if (p.color === 'w') {
+            score += val + posBonus;
+          } else {
+            score -= val + posBonus;
+          }
+        }
+      }
+      return score;
+    }
+
+    // Sắp xếp nước đi (MVV-LVA) để cắt tỉa Alpha-Beta siêu nhanh
+    function orderMoves(b, moves) {
+      return moves.sort((a, bMove) => {
+        let scoreA = 0;
+        let scoreB = 0;
+        if (a.promotion) scoreA += PIECE_VALUES[a.promotion];
+        if (bMove.promotion) scoreB += PIECE_VALUES[bMove.promotion];
+        if (a.capture) {
+          const victim = b[a.to.r][a.to.c];
+          const attacker = b[a.from.r][a.from.c];
+          scoreA += 10 * (victim ? PIECE_VALUES[victim.type] : 100) - PIECE_VALUES[attacker.type];
+        }
+        if (bMove.capture) {
+          const victim = b[bMove.to.r][bMove.to.c];
+          const attacker = b[bMove.from.r][bMove.from.c];
+          scoreB += 10 * (victim ? PIECE_VALUES[victim.type] : 100) - PIECE_VALUES[attacker.type];
+        }
+        if (a.castle) scoreA += 45;
+        if (bMove.castle) scoreB += 45;
+        return scoreB - scoreA;
+      });
+    }
+
+    function minimax(state, depth, alpha, beta, maximizingWhite) {
+      const legalMoves = generateLegalMoves(state.board, state.turn, state.castling, state.enPassant);
+
+      if (legalMoves.length === 0) {
+        if (isKingInCheck(state.board, state.turn)) {
+          // Ưu tiên chiếu hết càng sớm càng tốt
+          return maximizingWhite ? (-99999 - depth * 100) : (99999 + depth * 100);
+        }
+        return 0; // Hòa Stalemate
+      }
+
+      if (depth === 0) {
+        return evaluateBoard(state.board);
+      }
+
+      const ordered = orderMoves(state.board, legalMoves);
+
+      if (maximizingWhite) {
+        let maxEval = -Infinity;
+        for (const m of ordered) {
+          const nextState = applyMoveToState(state, m);
+          const ev = minimax(nextState, depth - 1, alpha, beta, false);
+          if (ev > maxEval) maxEval = ev;
+          if (ev > alpha) alpha = ev;
+          if (beta <= alpha) break;
+        }
+        return maxEval;
+      } else {
+        let minEval = Infinity;
+        for (const m of ordered) {
+          const nextState = applyMoveToState(state, m);
+          const ev = minimax(nextState, depth - 1, alpha, beta, true);
+          if (ev < minEval) minEval = ev;
+          if (ev < beta) beta = ev;
+          if (beta <= alpha) break;
+        }
+        return minEval;
+      }
+    }
+
+    function chooseBestAiMove() {
+      const aiColor = playerColor === 'w' ? 'b' : 'w';
+      const rootState = { board, turn: aiColor, castling, enPassant: enPassantTarget };
+      const legalMoves = generateLegalMoves(board, aiColor, castling, enPassantTarget);
+      if (legalMoves.length === 0) return null;
+
+      // Mức độ 1: Dễ (45% đi ngẫu nhiên tự nhiên, 55% tìm kiếm nông độ sâu 1)
+      if (difficulty === 1) {
+        if (Math.random() < 0.45) {
+          return legalMoves[Math.floor(Math.random() * legalMoves.length)];
+        }
+      }
+
+      const searchDepth = difficulty === 1 ? 1 : (difficulty === 2 ? 2 : 3);
+      const maximizingWhite = aiColor === 'w';
+      const ordered = orderMoves(board, legalMoves);
+
+      let bestMoves = [];
+      let bestScore = maximizingWhite ? -Infinity : Infinity;
+
+      for (const m of ordered) {
+        const nextState = applyMoveToState(rootState, m);
+        // Tránh lặp lại thế cờ nếu AI đang chiếm ưu thế
+        const nextKey = getPositionKey(nextState.board, nextState.turn, nextState.castling, nextState.enPassant);
+        const repeatPenalty = (positionHistory[nextKey] || 0) >= 1 ? (maximizingWhite ? -35 : 35) : 0;
+
+        const score = minimax(nextState, searchDepth - 1, -Infinity, Infinity, !maximizingWhite) + repeatPenalty;
+
+        if (maximizingWhite) {
+          if (score > bestScore + 3) {
+            bestScore = score;
+            bestMoves = [m];
+          } else if (Math.abs(score - bestScore) <= 3) {
+            bestMoves.push(m);
+          }
+        } else {
+          if (score < bestScore - 3) {
+            bestScore = score;
+            bestMoves = [m];
+          } else if (Math.abs(score - bestScore) <= 3) {
+            bestMoves.push(m);
+          }
+        }
+      }
+
+      return bestMoves[Math.floor(Math.random() * bestMoves.length)] || ordered[0];
+    }
+
+    /**
+     * =========================================================================
+     * 5. ĐIỀU KHIỂN VÁN ĐẤU & RENDER GIAO DIỆN
+     * =========================================================================
+     */
+    function startNewGame() {
+      if (aiTimer) clearTimeout(aiTimer);
+      isAiThinking = false;
+      board = createInitialBoard();
+      turn = 'w';
+      castling = { wK: true, wQ: true, bK: true, bQ: true };
+      enPassantTarget = null;
+      halfMoveClock = 0;
+      positionHistory = {};
+      moveStack = [];
+      algebraicHistory = [];
+      selectedSq = null;
+      legalMovesForSelected = [];
+      lastMove = null;
+      gameResult = null;
+      pendingPromotion = null;
+      triggerCheckShake = false;
+      cancelActiveDrag();
+
+      const initKey = getPositionKey(board, turn, castling, enPassantTarget);
+      positionHistory[initKey] = 1;
+
+      document.getElementById('promotion-modal').classList.add('hidden');
+      document.getElementById('game-over-toast').classList.add('hidden');
+      document.getElementById('ai-thinking').classList.add('hidden');
+
+      renderStylePreviews();
+      updatePlayerPanels();
+      renderMoveHistoryBar();
+      renderBoard();
+
+      // Nếu người chơi chọn cầm quân Đen, máy cầm Trắng đi trước
+      if (playerColor === 'b') {
+        scheduleAiTurn();
+      }
+    }
+
+    function toggleCustomizePanel() {
+      const panel = document.getElementById('customize-panel');
+      panel.classList.toggle('hidden');
+    }
+
+    function setBoardTheme(themeName) {
+      currentBoardTheme = themeName;
+      const wrapper = document.getElementById('board-wrapper');
+      wrapper.classList.remove('theme-wood', 'theme-green', 'theme-marble', 'theme-mahogany');
+      wrapper.classList.add(`theme-${themeName}`);
+
+      ['wood', 'green', 'marble', 'mahogany'].forEach(t => {
+        const btn = document.getElementById(`theme-btn-${t}`);
+        if (btn) btn.classList.toggle('active', t === themeName);
+      });
+    }
+
+    function setPieceStyle(styleName) {
+      currentPieceStyle = styleName;
+      ['neo', 'classic', 'minimal'].forEach(s => {
+        const btn = document.getElementById(`piece-btn-${s}`);
+        if (btn) btn.classList.toggle('active', s === styleName);
+      });
+      updateCapturedPieces();
+      renderBoard();
+    }
+
+    function renderStylePreviews() {
+      const elNeo = document.getElementById('preview-piece-neo');
+      const elClassic = document.getElementById('preview-piece-classic');
+      const elMinimal = document.getElementById('preview-piece-minimal');
+      if (elNeo) elNeo.innerHTML = getPieceSVG('n', 'w', 'neo');
+      if (elClassic) elClassic.innerHTML = getPieceSVG('n', 'w', 'classic');
+      if (elMinimal) elMinimal.innerHTML = getPieceSVG('n', 'w', 'minimal');
+    }
+
+    function setDifficulty(lvl) {
+      difficulty = lvl;
+      [1, 2, 3].forEach(i => {
+        const btn = document.getElementById(`lvl-${i}`);
+        if (i === lvl) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+      updatePlayerPanels();
+    }
+
+    function choosePlayerSide(side) {
+      if (playerColor === side) return;
+      playerColor = side;
+      flipped = (side === 'b');
+
+      const btnW = document.getElementById('side-w');
+      const btnB = document.getElementById('side-b');
+      if (side === 'w') {
+        btnW.className = 'px-2.5 py-1 rounded-md text-xs font-bold bg-[#e8e6e3] text-[#222] transition';
+        btnB.className = 'px-2.5 py-1 rounded-md text-xs font-bold text-stone-300 hover:text-white transition';
+      } else {
+        btnB.className = 'px-2.5 py-1 rounded-md text-xs font-bold bg-[#52504e] text-white border border-stone-500 transition';
+        btnW.className = 'px-2.5 py-1 rounded-md text-xs font-bold text-stone-300 hover:text-white transition';
+      }
+
+      startNewGame();
+    }
+
+    function flipBoard() {
+      flipped = !flipped;
+      updatePlayerPanels();
+      renderBoard();
+    }
+
+    function toggleSound() {
+      const on = SoundFX.toggle();
+      document.getElementById('sound-icon-on').classList.toggle('hidden', !on);
+      document.getElementById('sound-icon-off').classList.toggle('hidden', on);
+      document.getElementById('sound-label').textContent = on ? 'Âm thanh' : 'Tắt tiếng';
+    }
+
+    function undoMove() {
+      if (isAiThinking || pendingPromotion || moveStack.length === 0) return;
+      cancelActiveDrag();
+
+      // Nếu đang đến lượt người chơi, lùi 2 nước (nước của AI + nước của người chơi)
+      // Nếu ván đã kết thúc sau nước người chơi, lùi 1 nước
+      let steps = 1;
+      if (turn === playerColor && moveStack.length >= 2) {
+        steps = 2;
+      } else if (turn !== playerColor && moveStack.length === 1 && playerColor === 'b') {
+        return; // Không thể undo nước mở màn của AI nếu chưa đánh
+      }
+
+      for (let i = 0; i < steps && moveStack.length > 0; i++) {
+        const snap = moveStack.pop();
+        board = snap.board;
+        turn = snap.turn;
+        castling = snap.castling;
+        enPassantTarget = snap.enPassant;
+        halfMoveClock = snap.halfMoveClock;
+        positionHistory = snap.positionHistory;
+        lastMove = snap.lastMove;
+        algebraicHistory.pop();
+      }
+
+      selectedSq = null;
+      legalMovesForSelected = [];
+      gameResult = null;
+      triggerCheckShake = false;
+      document.getElementById('game-over-toast').classList.add('hidden');
+
+      updatePlayerPanels();
+      renderMoveHistoryBar();
+      renderBoard();
+    }
+
+    // Tạo ký hiệu nước đi chuẩn đại số (VD: e4, Nf3, Qxd5+, O-O, e8=Q#)
+    function formatAlgebraicNotation(bBefore, move, legalMovesBefore, isCheckAfter, isMateAfter) {
+      if (move.castle === 'K') return 'O-O' + (isMateAfter ? '#' : isCheckAfter ? '+' : '');
+      if (move.castle === 'Q') return 'O-O-O' + (isMateAfter ? '#' : isCheckAfter ? '+' : '');
+
+      const piece = bBefore[move.from.r][move.from.c];
+      const pieceLetters = { p: '', n: 'N', b: 'B', r: 'R', q: 'Q', k: 'K' };
+      let san = pieceLetters[piece.type];
+
+      if (piece.type !== 'p') {
+        const sameTypePeers = legalMovesBefore.filter(m =>
+          m.to.r === move.to.r &&
+          m.to.c === move.to.c &&
+          (m.from.r !== move.from.r || m.from.c !== move.from.c) &&
+          bBefore[m.from.r][m.from.c]?.type === piece.type
+        );
+        if (sameTypePeers.length > 0) {
+          const sameFile = sameTypePeers.some(m => m.from.c === move.from.c);
+          const sameRank = sameTypePeers.some(m => m.from.r === move.from.r);
+          if (!sameFile) san += FILES[move.from.c];
+          else if (!sameRank) san += String(8 - move.from.r);
+          else san += FILES[move.from.c] + String(8 - move.from.r);
+        }
+      } else if (move.capture) {
+        san += FILES[move.from.c];
+      }
+
+      if (move.capture) san += 'x';
+      san += FILES[move.to.c] + String(8 - move.to.r);
+      if (move.promotion) san += '=' + move.promotion.toUpperCase();
+      if (isMateAfter) san += '#';
+      else if (isCheckAfter) san += '+';
+      return san;
+    }
+
+    function renderMoveHistoryBar() {
+      const bar = document.getElementById('move-history-bar');
+      if (!bar) return;
+      if (algebraicHistory.length === 0) {
+        bar.innerHTML = '<span class="text-stone-500 italic">Chưa có nước đi</span>';
+        return;
+      }
+      let html = '';
+      for (let i = 0; i < algebraicHistory.length; i += 2) {
+        const moveNum = Math.floor(i / 2) + 1;
+        const whiteMove = algebraicHistory[i];
+        const blackMove = algebraicHistory[i + 1] || '';
+        html += `<span class="inline-flex items-center gap-1 bg-[#262320] px-1.5 py-0.5 rounded">
+          <span class="text-stone-500">${moveNum}.</span>
+          <span class="text-stone-100 font-semibold">${whiteMove}</span>
+          ${blackMove ? `<span class="text-amber-200/90">${blackMove}</span>` : ''}
+        </span>`;
+      }
+      bar.innerHTML = html;
+      bar.scrollLeft = bar.scrollWidth;
+    }
+
+    function executeMove(move) {
+      cancelActiveDrag();
+      const legalBefore = generateLegalMoves(board, turn, castling, enPassantTarget);
+      const boardBefore = cloneBoard(board);
+
+      // Lưu snapshot trước khi đi để phục vụ Undo
+      moveStack.push({
+        board: cloneBoard(board),
+        turn,
+        castling: { ...castling },
+        enPassant: enPassantTarget ? { ...enPassantTarget } : null,
+        halfMoveClock,
+        positionHistory: { ...positionHistory },
+        lastMove: lastMove ? { from: { ...lastMove.from }, to: { ...lastMove.to } } : null
+      });
+
+      const movingPiece = board[move.from.r][move.from.c];
+      const next = applyMoveToState({ board, turn, castling, enPassant: enPassantTarget }, move);
+
+      if (movingPiece.type === 'p' || move.capture) {
+        halfMoveClock = 0;
+      } else {
+        halfMoveClock++;
+      }
+
+      board = next.board;
+      turn = next.turn;
+      castling = next.castling;
+      enPassantTarget = next.enPassant;
+      lastMove = { from: move.from, to: move.to };
+      selectedSq = null;
+      legalMovesForSelected = [];
+
+      const key = getPositionKey(board, turn, castling, enPassantTarget);
+      positionHistory[key] = (positionHistory[key] || 0) + 1;
+
+      // Kiểm tra trạng thái ván đấu sau nước đi
+      const nextLegalMoves = generateLegalMoves(board, turn, castling, enPassantTarget);
+      const inCheckNow = isKingInCheck(board, turn);
+      const isMateNow = nextLegalMoves.length === 0 && inCheckNow;
+
+      // Kích hoạt hiệu ứng Vua giật nhẹ khi bị chiếu thường (chưa chiếu hết)
+      triggerCheckShake = inCheckNow && !isMateNow;
+
+      const san = formatAlgebraicNotation(boardBefore, move, legalBefore, inCheckNow, isMateNow);
+      algebraicHistory.push(san);
+
+      if (nextLegalMoves.length === 0) {
+        if (inCheckNow) {
+          const winner = turn === 'w' ? 'b' : 'w';
+          gameResult = {
+            status: 'checkmate',
+            winner,
+            reason: winner === 'w' ? 'Chiếu hết! Quân Trắng thắng' : 'Chiếu hết! Quân Đen thắng'
+          };
+          SoundFX.playMove(!!move.capture, true, !!move.castle);
+          setTimeout(() => SoundFX.playGameOver(winner === playerColor), 220);
+        } else {
+          gameResult = {
+            status: 'stalemate',
+            winner: null,
+            reason: 'Hòa cờ (Hết nước đi - Stalemate)'
+          };
+          SoundFX.playMove(!!move.capture, false, !!move.castle);
+        }
+      } else if (isInsufficientMaterial(board)) {
+        gameResult = { status: 'draw', winner: null, reason: 'Hòa cờ (Không đủ lực lượng chiếu hết)' };
+        SoundFX.playMove(!!move.capture, inCheckNow, !!move.castle);
+      } else if (positionHistory[key] >= 3) {
+        gameResult = { status: 'draw', winner: null, reason: 'Hòa cờ (Lặp lại thế cờ 3 lần)' };
+        SoundFX.playMove(!!move.capture, inCheckNow, !!move.castle);
+      } else if (halfMoveClock >= 100) {
+        gameResult = { status: 'draw', winner: null, reason: 'Hòa cờ (Luật 50 nước)' };
+        SoundFX.playMove(!!move.capture, inCheckNow, !!move.castle);
+      } else {
+        SoundFX.playMove(!!move.capture, inCheckNow, !!move.castle);
+      }
+
+      updatePlayerPanels();
+      renderMoveHistoryBar();
+      renderBoard();
+
+      if (gameResult) {
+        const toast = document.getElementById('game-over-toast');
+        document.getElementById('game-over-text').textContent = gameResult.reason;
+        toast.classList.remove('hidden');
+      } else if (turn !== playerColor) {
+        scheduleAiTurn();
+      }
+    }
+
+    function scheduleAiTurn() {
+      isAiThinking = true;
+      document.getElementById('ai-thinking').classList.remove('hidden');
+      document.getElementById('btn-undo').disabled = true;
+
+      aiTimer = setTimeout(() => {
+        const aiMove = chooseBestAiMove();
+        isAiThinking = false;
+        document.getElementById('ai-thinking').classList.add('hidden');
+        document.getElementById('btn-undo').disabled = false;
+        if (aiMove) {
+          executeMove(aiMove);
+        }
+      }, 280);
+    }
+
+    /**
+     * =========================================================================
+     * HỆ THỐNG KÉO THẢ MƯỢT MÀ 60FPS (POINTER EVENTS) + CLICK-TO-MOVE
+     * =========================================================================
+     */
+    function getSquareFromClientCoords(clientX, clientY) {
+      const boardEl = document.getElementById('chess-board');
+      const rect = boardEl.getBoundingClientRect();
+      if (
+        clientX < rect.left ||
+        clientX > rect.right ||
+        clientY < rect.top ||
+        clientY > rect.bottom
+      ) {
+        return null;
+      }
+      const viewC = Math.floor(((clientX - rect.left) / rect.width) * 8);
+      const viewR = Math.floor(((clientY - rect.top) / rect.height) * 8);
+      if (viewR < 0 || viewR > 7 || viewC < 0 || viewC > 7) return null;
+
+      const r = flipped ? 7 - viewR : viewR;
+      const c = flipped ? 7 - viewC : viewC;
+      return { r, c };
+    }
+
+    function updateGhostPosition(clientX, clientY) {
+      const ghost = document.getElementById('drag-ghost');
+      ghost.style.left = `${clientX}px`;
+      ghost.style.top = `${clientY}px`;
+    }
+
+    function cancelActiveDrag() {
+      const ghost = document.getElementById('drag-ghost');
+      if (ghost) {
+        ghost.style.display = 'none';
+        ghost.innerHTML = '';
+      }
+      document.querySelectorAll('.dragging-source').forEach(el => el.classList.remove('dragging-source'));
+      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      dragState = {
+        active: false,
+        pointerId: null,
+        from: null,
+        startX: 0,
+        startY: 0,
+        hasMoved: false,
+        hoverSq: null
+      };
+    }
+
+    function handleBoardPointerDown(e) {
+      if (e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+      if (gameResult || isAiThinking || pendingPromotion || turn !== playerColor) return;
+
+      const sqPos = getSquareFromClientCoords(e.clientX, e.clientY);
+      if (!sqPos) return;
+
+      const { r, c } = sqPos;
+      const clickedPiece = board[r][c];
+
+      // Trường hợp 1: Bấm vào quân của phe mình -> Chọn quân & chuẩn bị kéo thả
+      if (clickedPiece && clickedPiece.color === playerColor) {
+        const isSameSquare = selectedSq && selectedSq.r === r && selectedSq.c === c;
+        selectedSq = { r, c };
+        const allLegal = generateLegalMoves(board, playerColor, castling, enPassantTarget);
+        legalMovesForSelected = allLegal.filter(m => m.from.r === r && m.from.c === c);
+
+        renderBoard();
+
+        // Khởi tạo trạng thái kéo (chưa hiện ghost cho tới khi di chuyển quá 3px để phân biệt click thuần túy)
+        dragState = {
+          active: true,
+          pointerId: e.pointerId,
+          from: { r, c },
+          startX: e.clientX,
+          startY: e.clientY,
+          hasMoved: false,
+          hoverSq: { r, c },
+          toggleDeselectOnClick: isSameSquare
+        };
+
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch (err) {}
+        return;
+      }
+
+      // Trường hợp 2: Đã chọn quân từ trước và bấm vào ô đích (trống hoặc quân địch)
+      if (selectedSq) {
+        const matchingMoves = legalMovesForSelected.filter(m => m.to.r === r && m.to.c === c);
+        if (matchingMoves.length > 0) {
+          if (matchingMoves[0].promotion) {
+            openPromotionModal(matchingMoves[0].from, matchingMoves[0].to);
+            return;
+          }
+          executeMove(matchingMoves[0]);
+          return;
+        }
+      }
+
+      // Bấm ra ô trống không hợp lệ -> bỏ chọn
+      selectedSq = null;
+      legalMovesForSelected = [];
+      renderBoard();
+    }
+
+    function handleBoardPointerMove(e) {
+      if (!dragState.active || e.pointerId !== dragState.pointerId) return;
+
+      const dx = e.clientX - dragState.startX;
+      const dy = e.clientY - dragState.startY;
+
+      // Kích hoạt chế độ kéo nổi khi con trỏ di chuyển vượt ngưỡng 4px
+      if (!dragState.hasMoved) {
+        if (Math.hypot(dx, dy) < 4) return;
+        dragState.hasMoved = true;
+
+        const piece = board[dragState.from.r][dragState.from.c];
+        if (!piece) {
+          cancelActiveDrag();
+          return;
+        }
+
+        const boardEl = document.getElementById('chess-board');
+        const sqSize = boardEl.getBoundingClientRect().width / 8;
+
+        const ghost = document.getElementById('drag-ghost');
+        ghost.style.width = `${sqSize * 0.88}px`;
+        ghost.style.height = `${sqSize * 0.88}px`;
+        ghost.innerHTML = getPieceSVG(piece.type, piece.color);
+        ghost.style.display = 'flex';
+
+        const srcEl = document.querySelector(`[data-r="${dragState.from.r}"][data-c="${dragState.from.c}"] .piece-container`);
+        if (srcEl) srcEl.classList.add('dragging-source');
+      }
+
+      updateGhostPosition(e.clientX, e.clientY);
+
+      // Cập nhật viền sáng ô đang rê quân qua
+      const hoverPos = getSquareFromClientCoords(e.clientX, e.clientY);
+      const prevHover = dragState.hoverSq;
+      if (!prevHover || !hoverPos || prevHover.r !== hoverPos.r || prevHover.c !== hoverPos.c) {
+        if (prevHover) {
+          const prevEl = document.querySelector(`[data-r="${prevHover.r}"][data-c="${prevHover.c}"]`);
+          if (prevEl) prevEl.classList.remove('drag-over');
+        }
+        if (hoverPos) {
+          const nextEl = document.querySelector(`[data-r="${hoverPos.r}"][data-c="${hoverPos.c}"]`);
+          if (nextEl) nextEl.classList.add('drag-over');
+        }
+        dragState.hoverSq = hoverPos;
+      }
+    }
+
+    function handleBoardPointerUp(e) {
+      if (!dragState.active || e.pointerId !== dragState.pointerId) return;
+
+      const wasDragged = dragState.hasMoved;
+      const fromSq = dragState.from;
+      const toggleDeselect = dragState.toggleDeselectOnClick;
+
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+
+      cancelActiveDrag();
+
+      // Nếu người chơi chỉ bấm tại chỗ (không kéo) và bấm lại đúng quân đang chọn -> bỏ chọn
+      if (!wasDragged) {
+        if (toggleDeselect) {
+          selectedSq = null;
+          legalMovesForSelected = [];
+          renderBoard();
+        }
+        return;
+      }
+
+      // Nếu có kéo quân: kiểm tra ô đích thả chuột/ngón tay
+      const dropPos = getSquareFromClientCoords(e.clientX, e.clientY);
+      if (dropPos && (dropPos.r !== fromSq.r || dropPos.c !== fromSq.c)) {
+        const matchingMoves = legalMovesForSelected.filter(m => m.to.r === dropPos.r && m.to.c === dropPos.c);
+        if (matchingMoves.length > 0) {
+          if (matchingMoves[0].promotion) {
+            openPromotionModal(matchingMoves[0].from, matchingMoves[0].to);
+            return;
+          }
+          executeMove(matchingMoves[0]);
+          return;
+        }
+      }
+
+      // Thả ra ngoài hoặc ô không hợp lệ -> Giữ nguyên trạng thái đang chọn quân đó để có thể bấm tiếp
+      renderBoard();
+    }
+
+    function openPromotionModal(from, to) {
+      pendingPromotion = { from, to };
+      const container = document.getElementById('promotion-options');
+      container.innerHTML = '';
+      ['q', 'r', 'b', 'n'].forEach(type => {
+        const btn = document.createElement('button');
+        btn.className = 'promo-choice aspect-square rounded-xl p-1.5 flex items-center justify-center cursor-pointer shadow-md';
+        btn.innerHTML = getPieceSVG(type, playerColor);
+        btn.onclick = () => {
+          document.getElementById('promotion-modal').classList.add('hidden');
+          const move = { from, to, promotion: type, capture: !!board[to.r][to.c] };
+          pendingPromotion = null;
+          executeMove(move);
+        };
+        container.appendChild(btn);
+      });
+      document.getElementById('promotion-modal').classList.remove('hidden');
+    }
+
+    // Tính danh sách quân bị ăn để hiển thị gọn đẹp trên thanh người chơi
+    function updateCapturedPieces() {
+      const startCounts = { q: 1, r: 2, b: 2, n: 2, p: 8 };
+      const current = { w: { q: 0, r: 0, b: 0, n: 0, p: 0 }, b: { q: 0, r: 0, b: 0, n: 0, p: 0 } };
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const p = board[r][c];
+          if (p && p.type !== 'k') current[p.color][p.type]++;
+        }
+      }
+
+      // Quân đen bị mất (do Trắng ăn) & Quân trắng bị mất (do Đen ăn)
+      const lostByBlack = [];
+      const lostByWhite = [];
+      for (const t of ['q', 'r', 'b', 'n', 'p']) {
+        for (let i = 0; i < Math.max(0, startCounts[t] - current.b[t]); i++) lostByBlack.push(t);
+        for (let i = 0; i < Math.max(0, startCounts[t] - current.w[t]); i++) lostByWhite.push(t);
+      }
+
+      const topColor = flipped ? 'w' : 'b';
+      const bottomColor = flipped ? 'b' : 'w';
+
+      const topCapturedEl = document.getElementById('top-captured');
+      const bottomCapturedEl = document.getElementById('bottom-captured');
+
+      // Quân mà người ngồi phía trên đã ăn được (tức là quân của phe dưới bị mất)
+      const topWonPieces = topColor === 'w' ? lostByBlack : lostByWhite;
+      const topWonPieceColor = topColor === 'w' ? 'b' : 'w';
+
+      const bottomWonPieces = bottomColor === 'w' ? lostByBlack : lostByWhite;
+      const bottomWonPieceColor = bottomColor === 'w' ? 'b' : 'w';
+
+      topCapturedEl.innerHTML = topWonPieces
+        .map(t => `<div class="w-4 h-4 -ml-1 first:ml-0">${getPieceSVG(t, topWonPieceColor)}</div>`)
+        .join('');
+
+      bottomCapturedEl.innerHTML = bottomWonPieces
+        .map(t => `<div class="w-4 h-4 -ml-1 first:ml-0">${getPieceSVG(t, bottomWonPieceColor)}</div>`)
+        .join('');
+    }
+
+    function updatePlayerPanels() {
+      const levelNames = { 1: 'Dễ', 2: 'Trung bình', 3: 'Khó' };
+      const topColor = flipped ? 'w' : 'b';
+      const bottomColor = flipped ? 'b' : 'w';
+
+      const isTopAi = topColor !== playerColor;
+      document.getElementById('top-name').textContent = isTopAi
+        ? `Máy (${levelNames[difficulty]})`
+        : `Người chơi (${topColor === 'w' ? 'Trắng' : 'Đen'})`;
+      document.getElementById('top-avatar').textContent = isTopAi ? 'AI' : 'BẠN';
+      document.getElementById('top-avatar').className = topColor === 'w'
+        ? 'w-8 h-8 rounded-lg bg-[#e8e6e3] border border-[#b5b0a8] flex items-center justify-center font-bold text-xs text-[#262421]'
+        : 'w-8 h-8 rounded-lg bg-[#3c3936] border border-[#524e4a] flex items-center justify-center font-bold text-xs text-stone-200';
+
+      const isBottomAi = bottomColor !== playerColor;
+      document.getElementById('bottom-name').textContent = isBottomAi
+        ? `Máy (${levelNames[difficulty]})`
+        : `Người chơi (${bottomColor === 'w' ? 'Trắng' : 'Đen'})`;
+      document.getElementById('bottom-avatar').textContent = isBottomAi ? 'AI' : 'BẠN';
+      document.getElementById('bottom-avatar').className = bottomColor === 'w'
+        ? 'w-8 h-8 rounded-lg bg-[#e8e6e3] border border-[#b5b0a8] flex items-center justify-center font-bold text-xs text-[#262421]'
+        : 'w-8 h-8 rounded-lg bg-[#3c3936] border border-[#524e4a] flex items-center justify-center font-bold text-xs text-stone-200';
+
+      const statusEl = document.getElementById('status-banner');
+      if (gameResult) {
+        statusEl.textContent = gameResult.status === 'checkmate' ? 'Chiếu hết!' : 'Hòa cờ';
+        statusEl.className = 'text-xs sm:text-sm font-bold px-3 py-1 rounded-lg bg-rose-600/90 text-white border border-rose-400';
+      } else {
+        const checked = isKingInCheck(board, turn);
+        const turnText = turn === 'w' ? 'Lượt quân Trắng' : 'Lượt quân Đen';
+        statusEl.textContent = checked ? `${turnText} (Chiếu!)` : turnText;
+        statusEl.className = checked
+          ? 'text-xs sm:text-sm font-bold px-3 py-1 rounded-lg bg-rose-600/85 text-white border border-rose-400'
+          : 'text-xs sm:text-sm font-semibold px-3 py-1 rounded-lg bg-[#312e2b] text-amber-200 border border-[#45413c]';
+      }
+
+      document.getElementById('btn-undo').disabled = moveStack.length === 0 || isAiThinking;
+      updateCapturedPieces();
+    }
+
+    /**
+     * =========================================================================
+     * 6. RENDER BÀN CỜ & HIỆU ỨNG VUA NẰM NGANG + HUY HIỆU KHI CHIẾU HẾT
+     * =========================================================================
+     */
+    function renderBoard() {
+      const boardEl = document.getElementById('chess-board');
+      boardEl.innerHTML = '';
+
+      const checkedKingColor = isKingInCheck(board, turn) ? turn : null;
+
+      for (let viewR = 0; viewR < 8; viewR++) {
+        for (let viewC = 0; viewC < 8; viewC++) {
+          const r = flipped ? 7 - viewR : viewR;
+          const c = flipped ? 7 - viewC : viewC;
+
+          const isLight = (r + c) % 2 === 0;
+          const sq = document.createElement('div');
+          sq.className = `square ${isLight ? 'light' : 'dark'}`;
+          sq.dataset.r = String(r);
+          sq.dataset.c = String(c);
+
+          // Highlight nước đi vừa thực hiện
+          if (lastMove && ((lastMove.from.r === r && lastMove.from.c === c) || (lastMove.to.r === r && lastMove.to.c === c))) {
+            sq.classList.add('last-move');
+          }
+
+          // Highlight ô đang chọn
+          if (selectedSq && selectedSq.r === r && selectedSq.c === c) {
+            sq.classList.add('selected');
+          }
+
+          const piece = board[r][c];
+
+          // Highlight ô Vua bị chiếu hoặc chiếu hết (đỏ san hô cảnh báo)
+          if (piece && piece.type === 'k' && piece.color === checkedKingColor) {
+            sq.classList.add('in-check');
+          }
+
+          // Lớp phủ màu nền trạng thái
+          const overlay = document.createElement('div');
+          overlay.className = 'square-overlay';
+          sq.appendChild(overlay);
+
+          // Tọa độ bàn cờ
+          if (viewC === 0) {
+            const rankLabel = document.createElement('span');
+            rankLabel.className = 'coord-rank';
+            rankLabel.textContent = String(8 - r);
+            sq.appendChild(rankLabel);
+          }
+
+          if (viewR === 7) {
+            const fileLabel = document.createElement('span');
+            fileLabel.className = 'coord-file';
+            fileLabel.textContent = FILES[c];
+            sq.appendChild(fileLabel);
+          }
+
+          // Hiển thị quân cờ
+          if (piece) {
+            const pieceWrap = document.createElement('div');
+            pieceWrap.className = 'piece-container';
+
+            // Khi chiếu hết: Vua thua cuộc xoay ngang 90 độ nằm đổ xuống!
+            const isCheckmatedKing =
+              gameResult &&
+              gameResult.status === 'checkmate' &&
+              piece.type === 'k' &&
+              piece.color !== gameResult.winner;
+
+            const isWinnerKing =
+              gameResult &&
+              gameResult.status === 'checkmate' &&
+              piece.type === 'k' &&
+              piece.color === gameResult.winner;
+
+            // Khi bị chiếu thường: Vua giật nhẹ cảnh báo
+            const isCheckedKing =
+              !gameResult &&
+              piece.type === 'k' &&
+              piece.color === checkedKingColor &&
+              triggerCheckShake;
+
+            if (isCheckmatedKing) {
+              pieceWrap.classList.add('checkmated-king');
+            } else if (isCheckedKing) {
+              pieceWrap.classList.add('checked-king-shake');
+            }
+
+            pieceWrap.innerHTML = getPieceSVG(piece.type, piece.color);
+            sq.appendChild(pieceWrap);
+
+            // Huy hiệu tròn đỏ (Vua đổ ngang) và xanh lá (Vương miện thắng) y hệt ảnh 1
+            if (isCheckmatedKing) {
+              const badge = document.createElement('div');
+              badge.className = 'endgame-badge badge-loser';
+              badge.innerHTML = `
+                <svg viewBox="0 0 24 24" class="w-3/4 h-3/4" style="transform: rotate(90deg);">
+                  <path d="M12 3v4M10 5h4M7 19h10l1.2-6.5c.4-2.2-1.2-4.2-3.4-4.2-1.2 0-2.2.6-2.8 1.5-.6-.9-1.6-1.5-2.8-1.5-2.2 0-3.8 2-3.4 4.2L7 19z"
+                        fill="#ffffff" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>`;
+              sq.appendChild(badge);
+            } else if (isWinnerKing) {
+              const badge = document.createElement('div');
+              badge.className = 'endgame-badge badge-winner';
+              badge.innerHTML = `
+                <svg viewBox="0 0 24 24" class="w-3/4 h-3/4">
+                  <path d="M4 17h16l1.5-8.5-5 4L12 6l-4.5 6.5-5-4L4 17z"
+                        fill="#ffffff" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/>
+                </svg>`;
+              sq.appendChild(badge);
+            }
+          }
+
+          // Hiển thị chấm gợi ý nước đi hợp lệ
+          const hintMove = legalMovesForSelected.find(m => m.to.r === r && m.to.c === c);
+          if (hintMove) {
+            const hint = document.createElement('div');
+            hint.className = piece ? 'move-hint-capture' : 'move-hint-dot';
+            sq.appendChild(hint);
+          }
+
+          boardEl.appendChild(sq);
+        }
+      }
+
+      // Chỉ kích hoạt animation giật Vua một lần ngay sau nước chiếu
+      triggerCheckShake = false;
+    }
+
+    // Khởi chạy ván đấu & gắn sự kiện Kéo thả Pointer Events khi tải xong trang
+    window.addEventListener('DOMContentLoaded', () => {
+      const boardEl = document.getElementById('chess-board');
+      boardEl.addEventListener('pointerdown', handleBoardPointerDown);
+      boardEl.addEventListener('pointermove', handleBoardPointerMove);
+      boardEl.addEventListener('pointerup', handleBoardPointerUp);
+      boardEl.addEventListener('pointercancel', cancelActiveDrag);
+
+      startNewGame();
+    });
+  </script>
 </body>
 </html>
